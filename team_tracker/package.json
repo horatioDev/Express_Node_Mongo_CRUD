@@ -1,0 +1,11 @@
+{
+  "name": "team_tracker",
+  "version": "1.0.0",
+  "description": "Welcome to the Employee/Developer Tracker App! This application allows you to efficiently manage and track employee information, streamline workflows, and improve overall productivity and communication within your organization.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Horatio Hanley",
+  "license": "ISC"
+}

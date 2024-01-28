@@ -1,0 +1,11 @@
+{
+  "name": "crud_express_mongo",
+  "version": "1.0.0",
+  "description": "This tutorial will guide you through building a simple CRUD (Create, Read, Update, Delete) application using Node.js, Express, and MongoDB. If you're new to server-side programming, don't worry! We'll explain each component as we go along.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Horatio Hanley",
+  "license": "ISC"
+}
