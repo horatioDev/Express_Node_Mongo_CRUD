@@ -28,7 +28,7 @@ app.get('/', (req, res) => {handle req})
 app.get('/', (req, res) => {
   // Let'serve index.html
   // __dirname is the current directory you're in. 
-  res.sendFile(__dirname, + '/index.html')
+  res.sendFile(__dirname + '/index.html')
 });
 // ----------------------------------------------------------------------------
 
