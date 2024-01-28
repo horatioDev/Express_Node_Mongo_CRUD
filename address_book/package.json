@@ -4,7 +4,8 @@
   "description": "The Address Book App is a simple application that allows users to store and manage their contacts online. It provides basic CRUD functionality (Create, Read, Update, Delete) to handle contact information effectively.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "author": "Horatio Hanley",
   "license": "ISC"
