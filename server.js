@@ -14,7 +14,7 @@ app.listen(PORT, function() {
 
 // Nodemon --------------------------------------------------------------------
 /*
-Nodemon restarts the server automatically when you save a file that’s used by the server.js. 
+Nodemon: restarts the server automatically when you save a file that’s used by the server.js. 
 npm install nodemon --save-dev
 
 Update script in package.json
@@ -23,7 +23,24 @@ Update script in package.json
 }
 
 npm run dev to trigger nodemon server.js
+
+---
+
+Body-parser: is a middleware that helps express handle reading data from the <form> element.
+npm install body-parser --save
+
+They help tidy up request objects before use w/ use method:
+app.use(bodyParser.urlencoded({extended: true}))
+
+urlencoded: method within body-parser tells body-parser to extract data from the <form> element and add them to the body property in the request object.
+
+Make sure you place body-parser before your CRUD handlers!
+app.get()
+app.post()
+app.put()
+app.delete()
 */
+
 // ----------------------------------------------------------------------------
 
 // Create ---------------------------------------------------------------------
@@ -41,10 +58,13 @@ name: Descriptive name
 
 We can handle this POST request with a post method in server.js. The path should be the value you placed in the action attribute.
 app.post('/path', (req, res) => { handle post req});
+
+See: Body-parser
 */
 
 app.post('/quotes', (req, res) => {
-  console.log('This is a POST request')
+  console.log('This is a POST request');
+  console.log(req.body)
 });
 // ----------------------------------------------------------------------------
 
