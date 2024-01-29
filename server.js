@@ -28,15 +28,24 @@ npm run dev to trigger nodemon server.js
 
 // Create ---------------------------------------------------------------------
 /*
-Browsers can only perform a Create operation if they send a POST request to the server though a <form> or javascript.
+Browsers can only perform a Create operation if they send a POST request:
+app.post(endpoint, callback);
+
+To the server though a <form> or javascript.
 
 To send a POST request the index.html needs a <form> element.
 The form should have an action, method attribute and a name attribute on each input element:
-action: endpoint
-method: Request
+action: tells the browser where to send the request: /endpoint
+method: tells the browser what kind of request to send: POST
 name: Descriptive name
+
+We can handle this POST request with a post method in server.js. The path should be the value you placed in the action attribute.
+app.post('/path', (req, res) => { handle post req});
 */
 
+app.post('/quotes', (req, res) => {
+  console.log('This is a POST request')
+});
 // ----------------------------------------------------------------------------
 
 // Read -----------------------------------------------------------------------
@@ -50,7 +59,7 @@ callback: tells the server what to do when the requested endpoint  matches the e
 
 It takes (req, res) as parameters where req is the HTTP request and res is the  HTTP response.
 
-app.get('/', (req, res) => {handle req})
+app.get('/', (req, res) => {handle get req})
 */
 
 app.get('/', (req, res) => {
