@@ -1,7 +1,10 @@
 // Create server for browser use w/ express
 const express = require('express');
+const bodyParser = require('body-parser')
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+
 
 // Listen for server on port localhost:3000
 app.listen(PORT, function() {
@@ -23,16 +26,20 @@ Update script in package.json
 }
 
 npm run dev to trigger nodemon server.js
+*/
 
----
+// ----------------------------------------------------------------------------
 
+// Body Parser ----------------------------------------------------------------
+/*
 Body-parser: is a middleware that helps express handle reading data from the <form> element.
 npm install body-parser --save
 
 They help tidy up request objects before use w/ use method:
 app.use(bodyParser.urlencoded({extended: true}))
 
-urlencoded: method within body-parser tells body-parser to extract data from the <form> element and add them to the body property in the request object.
+urlencoded: method within body-parser tells body-parser to extract data from the <form> element and add them to the body property in the request object:
+{ inputName: inputValue }
 
 Make sure you place body-parser before your CRUD handlers!
 app.get()
@@ -40,7 +47,7 @@ app.post()
 app.put()
 app.delete()
 */
-
+app.use(bodyParser.urlencoded({extended: true}));
 // ----------------------------------------------------------------------------
 
 // Create ---------------------------------------------------------------------
