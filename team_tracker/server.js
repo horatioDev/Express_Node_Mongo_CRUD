@@ -69,7 +69,7 @@ app.post('/path', (req, res) => { handle post req});
 See: Body-parser
 */
 
-app.post('/quotes', (req, res) => {
+app.post('/employees', (req, res) => {
   console.log('This is a POST request');
   console.log(req.body)
 });
