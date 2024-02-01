@@ -1,58 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-    	<meta charset="utf-8">
-    	<meta name="description" content="This is where your description goes">
-    	<meta name="keywords" content="one, two, three">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="description" content="This is where your description goes">
+	<meta name="keywords" content="one, two, three">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 
-		<title>Blog Posts App</title>
+	<title>Blog Posts App</title>
 
-		<!-- external CSS link -->
-		<link rel="stylesheet" href="css/normalize.css">
-		<link rel="stylesheet" href="css/style.css">
-	</head>
-	<body>
-		<h1>Posts: Node.js CRUD API with Express and MongoDB</h1>
+	<!-- external CSS link -->
+	<link rel="stylesheet" href="css/normalize.css">
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+	<h1>Posts: Node.js CRUD API with Express and MongoDB</h1>
+
+	<!-- Posts -->
+	<h1>Create New Post</h1>
+	<form action="/posts" method="POST">
+		<label for="title">Title:</label><br>
+		<input type="text" id="title" name="title" required><br>
+
+
+		<label for="author">Author:</label><br>
+		<input type="text" id="author" name="author" required><br>
+
+		<label for="tags">Tags:</label><br>
+		<input type="text" id="tags" name="tags" placeholder="Separate tags with commas"><br>
+
+		<label for="createdOn">Created on:</label><br>
+		<input type="date" id="createdOn" name="createdOn" required><br>
+
+		<label for="content">Content:</label><br>
+		<textarea id="content" name="content" rows="4" cols="50" required></textarea><br>
+
+		<button type="submit">Publish</button>
+	</form>
+
+	<!-- Template -->
+	<h3>Posts</h3>
 	
-		<!-- Posts -->
-		<h1>Create New Post</h1>
-		<form action="/posts" method="POST">
-			<label for="title">Title:</label><br>
-			<input type="text" id="title" name="title" required><br>
-			
-			
-			<label for="author">Author:</label><br>
-			<input type="text" id="author" name="author" required><br>
-			
-			<label for="tags">Tags:</label><br>
-			<input type="text" id="tags" name="tags" placeholder="Separate tags with commas"><br>
-			
-			<label for="createdOn">Created on:</label><br>
-			<input type="date" id="createdOn" name="createdOn"required><br>
-			
-			<label for="content">Content:</label><br>
-			<textarea id="content" name="content" rows="4" cols="50" required></textarea><br>
-			
-			<button type="submit">Publish</button>
-		</form>
-
-		<!-- Template -->
-		<h3>Posts</h3>
-		<ul class="posts">
-			<% for(let i=0; i < posts.length; i++) {%>
-				<li class="post">
-					<div>
-						<h3 class="title"><%= posts[i].title %></h3>
-						<small class="author">By: <%= posts[i].author %> on <%= posts[i].createdOn  %></sma><br>
-						<p class="content"><%= posts[i].content %></p>	
+	<ul class="posts">
+		<% posts.forEach(post => { %>
+			<li class="post">
+				<section class="entry">
+					<section class="info">
+						<h4 class="title">
+							<%= post.title %>
+						</h4>
+						<small class="author">By: <%= post.author %> on <%= post.createdOn %></small><br>
+						<small class="tags">Tags:  <%= post.tags %></small>
+						<p class="content">
+							<%= post.content %>
+						</p>
+					</section>
+					<div class="crud-buttons">
+						<!-- <a href="/edit/<%= post._id %>" class="btn btn-primary">Edit</a>
+							<a href="/delete/<%= post._id %>" class="btn btn-primary">Delete</a> -->
+						<button id="btn update-btn">Update</button>
+						<button id="btn delete-btn">Delete</button>
 					</div>
-				</li>
-			<%}%>
-		</ul>
-		<!-- <%= posts %> -->
+				</section>
+			</li>
+			<% }); %>
+	</ul>
+	<!-- <%= posts %> -->
 
-		<script type="text/javascript" src="js/main.js"></script>
-	</body>
+	<script type="text/javascript" src="js/main.js"></script>
+</body>
+
 </html>

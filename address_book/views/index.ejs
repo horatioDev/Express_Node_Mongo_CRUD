@@ -47,19 +47,28 @@
 
 		<!-- Template -->
 		<h2>Address Contacts</h2>
+		
 		<ul class="contacts">
-			<% for (let i=0; i < contacts.length; i++) {%>
-			  <li class="contact">
-					<div>
-						<span>Gender: </span><%= contacts[i].gender %><br>
-						<span>Name: </span><%= contacts[i].name %><br>
-						<span>dob:  </span><%= contacts[i].birthdate %><br>
-						<address>Address: <%= contacts[i].address %></address>	
-						<span>email:</span> <%= contacts[i].email %><br>				
-						<span>phone:</span> <%= contacts[i].phone %>					
-					</div>
+			<% contacts.forEach(contact => { %>
+				<li class="contact">
+					<section class="entry">
+						<section class="info">
+							<small>Gender: </small><%= contact.gender %><br>
+						<small>Name: </small><%= contact.name %><br>
+						<small>D.O.B:  </small><%= contact.birthdate %><br>
+						<address>Address: <%= contact.address %></address>	
+						<small>Email:</small> <%= contact.email %><br>				
+						<small>Contact No:</small> <%= contact.phone %><br>
+						</section>
+						<div class="crud-buttons">
+							<!-- <a href="/edit/<%= contact._id %>" class="btn btn-primary">Edit</a>
+							<a href="/delete/<%= contact._id %>" class="btn btn-primary">Delete</a> -->
+							<button id="btn update-btn">Update</button>
+							<button id="btn delete-btn">Delete</button>
+						</div>
+					</section>
 				</li>
-			<%}%>
+			<% }); %>
 		</ul>
 		<!-- <%= contacts %> -->
 		<script type="text/javascript" src="js/main.js"></script>

@@ -36,15 +36,23 @@
 		<!-- Template -->
 		<h3>Tasks List</h3>
 		<ul class="tasks">
-			<% for(let i=0; i < tasks.length; i++) {%>
+			<% tasks.forEach(task =>  {%>
 			<li class="task">
-				<div>
-					<span class="task-name"><%=tasks[i].taskName%></span><br>
-					<small>Due on: <%=tasks[i].dueDate%></small>
-					<p><%= tasks[i].description%></p>
-				</div>
+				<section class="entry">
+					<section class="info">
+						<span class="task-name"><%=task.taskName%></span><br>
+					<small>Due on: <%=task.dueDate%></small>
+					<p><%= task.description%></p>
+					</section>
+					<div class="crud-buttons">
+						<!-- <a href="/edit/<%= post._id %>" class="btn btn-primary">Edit</a>
+							<a href="/delete/<%= post._id %>" class="btn btn-primary">Delete</a> -->
+							<button id="btn update-btn">Update</button>
+							<button id="btn delete-btn">Delete</button>
+					</div>
+				</section>
 			</li>
-			<%}%>
+			<%})%>
 		</ul>
 		<!-- <%= tasks %> -->
 

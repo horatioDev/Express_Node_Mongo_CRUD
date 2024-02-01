@@ -7,7 +7,7 @@ const MongoClient = require('mongodb').MongoClient;
 // Import password
 const password = require('./password.js');
 const PASSWORD = password.getPassword();
-const CONNECTION_STRING = `mongodb+srv://quotes:${PASSWORD}@quotes-cluster.2cczmmj.mongodb.net/?retryWrites=true&w=majority}`;
+const CONNECTION_STRING = `mongodb+srv://quotes:${PASSWORD}@quotes-cluster.2cczmmj.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create Database Client Connection 
 MongoClient.connect(CONNECTION_STRING)

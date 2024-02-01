@@ -38,18 +38,27 @@
     <h2>Quotes</h2>
 
     <ul class="quotes">
-      <% for (let i=0; i < quotes.length; i++) {%>
-        <li class="quote">
-          <div>
-            <p>
-              "<%= quotes[i].quote %>"
-            </p>
-            <span>Author: <%= quotes[i].author %></span> <br />
-            <span>Category: <%= quotes[i].category %></span> <br />
-          </div>
-        </li>
-      <%}%>
-    </ul>
+			<% quotes.forEach(quote => { %>
+				<li class="quote">
+					<section class="entry">
+						<section class="info">
+							<q>
+								<%= quote.quote %>
+							</q>
+							<span>- <%= quote.author %></span> <br />
+							<small>Category: <%= quote.category %></small> <br />
+						</section>
+						<div class="crud-buttons">
+							<!-- <a href="/edit/<%= quote._id %>" class="btn btn-primary">Edit</a>
+							<a href="/delete/<%= quote._id %>" class="btn btn-primary">Delete</a> -->
+							<button id="btn update-btn">Update</button>
+							<button id="btn delete-btn">Delete</button>
+						</div>
+					</section>
+				</li>
+			<% }); %>
+		</ul>
+		
     <!-- <%= quotes %> -->
 
 		<script type="text/javascript" src="js/main.js"></script>

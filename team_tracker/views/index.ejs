@@ -18,7 +18,7 @@
 
         <!-- Team Members -->
         <h1>Add New Member</h1>
-        <form action="/employees" method="POST">
+        <form action="/employees" method="employee">
             <label for="name">Name:</label><br>
             <input type="text" id="name" name="name" required><br>
         
@@ -76,23 +76,31 @@
         <!-- Template -->
         <h3>Employees List</h3>
         <ul class="employees">
-			<% for(let i=0; i < employees.length; i++) {%>
+			<% employees.forEach(employee =>  {%>
 			<li class="employee">
-				<div>
-                    Employee ID: <%=employees[i]._id%><br>
-                    Name: <%=employees[i].name%><br>
-                    Gender: <%=employees[i].gender%><br>
-                    Age: <%=employees[i].dob%><br>  
-                    Contact No.: <%=employees[i].phone%><br> 
-					Email: <%=employees[i].email%><br>
-					Nationality: <%=employees[i].nationality%><br>
-					Department: <%=employees[i].department%><br>
-                    Position/Job Title: <%=employees[i].position%><br>
-                    Join Date: <%=employees[i].joiningDate%><br>
-                    Status: <%=employees[i].status%>
-				</div>
+				<section class="entry">
+                    <section class="info">
+                        <small>Employee ID:</small> <%=employee._id%><br>
+                        <small>Name:</small> <%=employee.name%><br>
+                        <small>Gender:</small> <%=employee.gender%><br>
+                        <small>Age:</small> <%=employee.dob%><br>  
+                        <small>Contact No.:</small> <%=employee.phone%><br> 
+                        <small>Email:</small> <%=employee.email%><br>
+                        <small>Nationality:</small> <%=employee.nationality%><br>
+                        <small>Department:</small> <%=employee.department%><br>
+                        <small>Position/Job Title:</small> <%=employee.position%><br>
+                        <small>Join Date:</small> <%=employee.joiningDate%><br>
+                        <small>Status:</small> <%=employee.status%>
+                    </section>
+                    <div class="crud-buttons">
+						<!-- <a href="/edit/<%= employee._id %>" class="btn btn-primary">Edit</a>
+							<a href="/delete/<%= employee._id %>" class="btn btn-primary">Delete</a> -->
+							<button id="btn update-btn">Update</button>
+							<button id="btn delete-btn">Delete</button>
+					</div>
+                </section>
 			</li>
-			<%}%>
+			<%})%>
 		</ul>
         <!-- <%= employees %> -->
 
