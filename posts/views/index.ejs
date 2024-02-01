@@ -29,6 +29,9 @@
 			<label for="tags">Tags:</label><br>
 			<input type="text" id="tags" name="tags" placeholder="Separate tags with commas"><br>
 			
+			<label for="createdOn">Created on:</label><br>
+			<input type="date" id="createdOn" name="createdOn"required><br>
+			
 			<label for="content">Content:</label><br>
 			<textarea id="content" name="content" rows="4" cols="50" required></textarea><br>
 			
@@ -36,7 +39,19 @@
 		</form>
 
 		<!-- Template -->
-		<%= posts %>
+		<h3>Posts</h3>
+		<ul class="posts">
+			<% for(let i=0; i < posts.length; i++) {%>
+				<li class="post">
+					<div>
+						<h3 class="title"><%= posts[i].title %></h3>
+						<small class="author">By: <%= posts[i].author %> on <%= posts[i].createdOn  %></sma><br>
+						<p class="content"><%= posts[i].content %></p>	
+					</div>
+				</li>
+			<%}%>
+		</ul>
+		<!-- <%= posts %> -->
 
 		<script type="text/javascript" src="js/main.js"></script>
 	</body>

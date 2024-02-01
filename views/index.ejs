@@ -33,8 +33,24 @@
 		
 			<button type="submit">Add Quote</button>
 		</form>
+    
     <!-- Template -->
-    <%= quotes %>
+    <h2>Quotes</h2>
+
+    <ul class="quotes">
+      <% for (let i=0; i < quotes.length; i++) {%>
+        <li class="quote">
+          <div>
+            <p>
+              "<%= quotes[i].quote %>"
+            </p>
+            <span>Author: <%= quotes[i].author %></span> <br />
+            <span>Category: <%= quotes[i].category %></span> <br />
+          </div>
+        </li>
+      <%}%>
+    </ul>
+    <!-- <%= quotes %> -->
 
 		<script type="text/javascript" src="js/main.js"></script>
 	</body>

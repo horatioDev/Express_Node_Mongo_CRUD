@@ -46,7 +46,22 @@
 		</form>
 
 		<!-- Template -->
-		<%= contacts %>
+		<h2>Address Contacts</h2>
+		<ul class="contacts">
+			<% for (let i=0; i < contacts.length; i++) {%>
+			  <li class="contact">
+					<div>
+						<span>Gender: </span><%= contacts[i].gender %><br>
+						<span>Name: </span><%= contacts[i].name %><br>
+						<span>dob:  </span><%= contacts[i].birthdate %><br>
+						<address>Address: <%= contacts[i].address %></address>	
+						<span>email:</span> <%= contacts[i].email %><br>				
+						<span>phone:</span> <%= contacts[i].phone %>					
+					</div>
+				</li>
+			<%}%>
+		</ul>
+		<!-- <%= contacts %> -->
 		<script type="text/javascript" src="js/main.js"></script>
 	</body>
 </html>

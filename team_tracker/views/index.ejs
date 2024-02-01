@@ -23,7 +23,7 @@
             <input type="text" id="name" name="name" required><br>
         
             <label for="employeeId">Member ID:</label><br>
-            <input type="text" id="memberId" name="memberId" required><br>
+            <input type="text" id="memberId" name="memberId" disabled><br>
         
             <label for="email">Email Address:</label><br>
             <input type="email" id="email" name="email" required><br>
@@ -74,7 +74,27 @@
         </form>
 
         <!-- Template -->
-        <%= employees %>
+        <h3>Employees List</h3>
+        <ul class="employees">
+			<% for(let i=0; i < employees.length; i++) {%>
+			<li class="employee">
+				<div>
+                    Employee ID: <%=employees[i]._id%><br>
+                    Name: <%=employees[i].name%><br>
+                    Gender: <%=employees[i].gender%><br>
+                    Age: <%=employees[i].dob%><br>  
+                    Contact No.: <%=employees[i].phone%><br> 
+					Email: <%=employees[i].email%><br>
+					Nationality: <%=employees[i].nationality%><br>
+					Department: <%=employees[i].department%><br>
+                    Position/Job Title: <%=employees[i].position%><br>
+                    Join Date: <%=employees[i].joiningDate%><br>
+                    Status: <%=employees[i].status%>
+				</div>
+			</li>
+			<%}%>
+		</ul>
+        <!-- <%= employees %> -->
 
 		<script type="text/javascript" src="js/main.js"></script>
 	</body>

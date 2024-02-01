@@ -17,6 +17,9 @@ MongoClient.connect(CONNECTION_STRING)
     const db = client.db("postsDB");
     const postsCollection = db.collection('posts');
 
+    // we need to set view engine to ejs. This tells Express we’re using EJS as the template engine
+    app.set('view engine', 'ejs');
+
     // Body Parser ----------------------------------------------------------------
     /*
     Body-parser: is a middleware that helps express handle reading data from the <form> element.

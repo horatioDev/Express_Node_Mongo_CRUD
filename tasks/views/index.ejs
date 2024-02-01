@@ -34,8 +34,20 @@
 		</form>
 
 		<!-- Template -->
-		<%= tasks %>
-		
+		<h3>Tasks List</h3>
+		<ul class="tasks">
+			<% for(let i=0; i < tasks.length; i++) {%>
+			<li class="task">
+				<div>
+					<span class="task-name"><%=tasks[i].taskName%></span><br>
+					<small>Due on: <%=tasks[i].dueDate%></small>
+					<p><%= tasks[i].description%></p>
+				</div>
+			</li>
+			<%}%>
+		</ul>
+		<!-- <%= tasks %> -->
+
 		<script type="text/javascript" src="js/main.js"></script>
 	</body>
 </html>
