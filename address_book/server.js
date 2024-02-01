@@ -12,7 +12,7 @@ const CONNECTION_STRING = `mongodb+srv://contacts:${PASSWORD}@contacts-cluster.x
 // Create Database Client Connection 
 MongoClient.connect(CONNECTION_STRING)
   .then(client => {
-    console.log('Connected to MongoDB Server:')
+    console.log('Connected to MongoDB Server')
     const db = client.db("contactsDB");
     const contactsCollection = db.collection('contacts');
 
@@ -95,14 +95,13 @@ MongoClient.connect(CONNECTION_STRING)
       // console.log(allContacts);
 
       // Convert data to array
-      const allContacts = db.collection('contacts').find()
+      db.collection('contacts').find()
         .toArray()
         .then(results => {
-          console.log(results);
+          // Render ejs
+          res.render('index.ejs', { contacts: results });
         })
         .catch(err => console.error(err));
-        // Render ejs
-        res.render('index.ejs', {});
 
     });
     // ----------------------------------------------------------------------------
