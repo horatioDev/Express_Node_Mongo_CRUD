@@ -1,9 +1,20 @@
 // Create server for browser use w/ express
 const express = require('express');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 3000;
+const MongoClient = require('mongodb').MongoClient;
+// Import password
+const password = require('./password.js');
+const PASSWORD = password.getPassword();
+const CONNECTION_STRING = `mongodb+srv://contacts:${PASSWORD}@contacts-cluster.xsvvs0g.mongodb.net/?retryWrites=true&w=majority}`;
 
+// Create Database Client Connection 
+MongoClient.connect(CONNECTION_STRING)
+.then(client => {
+  console.log('Connected to Database:', client);
+})
+.catch(error => { console.error(error)});
 
 
 // Listen for server on port localhost:3000
@@ -69,7 +80,7 @@ app.post('/path', (req, res) => { handle post req});
 See: Body-parser
 */
 
-app.post('/quotes', (req, res) => {
+app.post('/contacts', (req, res) => {
   console.log('This is a POST request');
   console.log(req.body)
 });

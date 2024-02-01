@@ -3,12 +3,22 @@ const express = require('express');
 const bodyParser = require('body-parser')
 const app = express();
 const PORT = process.env.PORT || 3000;
+const MongoClient = require('mongodb').MongoClient;
+// Import password
+const password = require('./password.js');
+const PASSWORD = password.getPassword();
+const CONNECTION_STRING = `mongodb+srv://quotes:${PASSWORD}@quotes-cluster.2cczmmj.mongodb.net/?retryWrites=true&w=majority}`;
 
-
+// Create Database Client Connection 
+MongoClient.connect(CONNECTION_STRING)
+.then(client => {
+  console.log('Connected to MongoDB Server:')
+})
+.catch(error => console.error(error));
 
 // Listen for server on port localhost:3000
 app.listen(PORT, function() {
-  console.log(`Listening on localhost:${PORT}`)
+  console.log(`Listening on localhost:${PORT}`, MongoClient)
 });
 
 // Run server
