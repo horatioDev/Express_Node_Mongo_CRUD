@@ -101,6 +101,8 @@ MongoClient.connect(CONNECTION_STRING)
         console.log(results);
       })
       .catch(err => console.error(err));
+      // Render ejs
+      res.render('index.ejs', {})
 
     });
     // ----------------------------------------------------------------------------
