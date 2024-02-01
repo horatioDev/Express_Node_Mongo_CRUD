@@ -49,26 +49,30 @@
 		<h2>Address Contacts</h2>
 		
 		<ul class="contacts">
-			<% contacts.forEach(contact => { %>
-				<li class="contact">
-					<section class="entry">
-						<section class="info">
-							<small>Gender: </small><%= contact.gender %><br>
-						<small>Name: </small><%= contact.name %><br>
-						<small>D.O.B:  </small><%= contact.birthdate %><br>
-						<address>Address: <%= contact.address %></address>	
-						<small>Email:</small> <%= contact.email %><br>				
-						<small>Contact No:</small> <%= contact.phone %><br>
+			<% if (contacts && contacts.length > 0) {%>
+				<% contacts.forEach(contact => { %>
+					<li class="contact">
+						<section class="entry">
+							<section class="info">
+								<small>Gender: </small><%= contact.gender %><br>
+							<small>Name: </small><%= contact.name %><br>
+							<small>D.O.B:  </small><%= contact.birthdate %><br>
+							<address>Address: <%= contact.address %></address>	
+							<small>Email:</small> <%= contact.email %><br>				
+							<small>Contact No:</small> <%= contact.phone %><br>
+							</section>
+							<div class="crud-buttons">
+								<!-- <a href="/edit/<%= contact._id %>" class="btn btn-primary">Edit</a>
+								<a href="/delete/<%= contact._id %>" class="btn btn-primary">Delete</a> -->
+								<button id="btn update-btn">Update</button>
+								<button id="btn delete-btn">Delete</button>
+							</div>
 						</section>
-						<div class="crud-buttons">
-							<!-- <a href="/edit/<%= contact._id %>" class="btn btn-primary">Edit</a>
-							<a href="/delete/<%= contact._id %>" class="btn btn-primary">Delete</a> -->
-							<button id="btn update-btn">Update</button>
-							<button id="btn delete-btn">Delete</button>
-						</div>
-					</section>
-				</li>
-			<% }); %>
+					</li>
+				<% }); %>
+			<% } else{ %>
+				<p>No contacts available.</p>
+			<%}%>
 		</ul>
 		<!-- <%= contacts %> -->
 		<script type="text/javascript" src="js/main.js"></script>

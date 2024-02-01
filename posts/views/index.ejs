@@ -44,28 +44,32 @@
 	<h3>Posts</h3>
 	
 	<ul class="posts">
-		<% posts.forEach(post => { %>
-			<li class="post">
-				<section class="entry">
-					<section class="info">
-						<h4 class="title">
-							<%= post.title %>
-						</h4>
-						<small class="author">By: <%= post.author %> on <%= post.createdOn %></small><br>
-						<small class="tags">Tags:  <%= post.tags %></small>
-						<p class="content">
-							<%= post.content %>
-						</p>
+		<% if (posts &&  posts.length > 0) { %>
+			<% posts.forEach(post => { %>
+				<li class="post">
+					<section class="entry">
+						<section class="info">
+							<h4 class="title">
+								<%= post.title %>
+							</h4>
+							<small class="author">By: <%= post.author %> on <%= post.createdOn %></small><br>
+							<small class="tags">Tags:  <%= post.tags %></small>
+							<p class="content">
+								<%= post.content %>
+							</p>
+						</section>
+						<div class="crud-buttons">
+							<!-- <a href="/edit/<%= post._id %>" class="btn btn-primary">Edit</a>
+								<a href="/delete/<%= post._id %>" class="btn btn-primary">Delete</a> -->
+							<button id="btn update-btn">Update</button>
+							<button id="btn delete-btn">Delete</button>
+						</div>
 					</section>
-					<div class="crud-buttons">
-						<!-- <a href="/edit/<%= post._id %>" class="btn btn-primary">Edit</a>
-							<a href="/delete/<%= post._id %>" class="btn btn-primary">Delete</a> -->
-						<button id="btn update-btn">Update</button>
-						<button id="btn delete-btn">Delete</button>
-					</div>
-				</section>
-			</li>
+				</li>
 			<% }); %>
+		<% } else { %>
+			<p>No posts available.</p>
+		<%}%>
 	</ul>
 	<!-- <%= posts %> -->
 

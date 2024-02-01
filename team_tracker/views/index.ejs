@@ -76,31 +76,35 @@
         <!-- Template -->
         <h3>Employees List</h3>
         <ul class="employees">
-			<% employees.forEach(employee =>  {%>
-			<li class="employee">
-				<section class="entry">
-                    <section class="info">
-                        <small>Employee ID:</small> <%=employee._id%><br>
-                        <small>Name:</small> <%=employee.name%><br>
-                        <small>Gender:</small> <%=employee.gender%><br>
-                        <small>Age:</small> <%=employee.dob%><br>  
-                        <small>Contact No.:</small> <%=employee.phone%><br> 
-                        <small>Email:</small> <%=employee.email%><br>
-                        <small>Nationality:</small> <%=employee.nationality%><br>
-                        <small>Department:</small> <%=employee.department%><br>
-                        <small>Position/Job Title:</small> <%=employee.position%><br>
-                        <small>Join Date:</small> <%=employee.joiningDate%><br>
-                        <small>Status:</small> <%=employee.status%>
-                    </section>
-                    <div class="crud-buttons">
-						<!-- <a href="/edit/<%= employee._id %>" class="btn btn-primary">Edit</a>
-							<a href="/delete/<%= employee._id %>" class="btn btn-primary">Delete</a> -->
-							<button id="btn update-btn">Update</button>
-							<button id="btn delete-btn">Delete</button>
-					</div>
-                </section>
-			</li>
-			<%})%>
+            <% if (employees && employees.length > 0) { %>
+                <% employees.forEach(employee =>  {%>
+                    <li class="employee">
+                        <section class="entry">
+                            <section class="info">
+                                <small>Employee ID:</small> <%=employee._id%><br>
+                                <small>Name:</small> <%=employee.name%><br>
+                                <small>Gender:</small> <%=employee.gender%><br>
+                                <small>Age:</small> <%=employee.dob%><br>  
+                                <small>Contact No.:</small> <%=employee.phone%><br> 
+                                <small>Email:</small> <%=employee.email%><br>
+                                <small>Nationality:</small> <%=employee.nationality%><br>
+                                <small>Department:</small> <%=employee.department%><br>
+                                <small>Position/Job Title:</small> <%=employee.position%><br>
+                                <small>Join Date:</small> <%=employee.joiningDate%><br>
+                                <small>Status:</small> <%=employee.status%>
+                            </section>
+                            <div class="crud-buttons">
+                                <!-- <a href="/edit/<%= employee._id %>" class="btn btn-primary">Edit</a>
+                                    <a href="/delete/<%= employee._id %>" class="btn btn-primary">Delete</a> -->
+                                    <button id="btn update-btn">Update</button>
+                                    <button id="btn delete-btn">Delete</button>
+                            </div>
+                        </section>
+                    </li>
+                <%})%>
+            <% } else {%>
+				<p>No employees available.</p>
+			<%}%>
 		</ul>
         <!-- <%= employees %> -->
 
