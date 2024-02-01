@@ -11,12 +11,12 @@ const CONNECTION_STRING = `mongodb+srv://employees:${PASSWORD}@employees-cluster
 
 // Create Client Connection
 MongoClient.connect(CONNECTION_STRING)
-.then(client => {
-  console.log('Connected to MongoDB Server:')
-  const db = client.db("employeesDB");
-  const employeesCollection = db.collection('employees');
+  .then(client => {
+    console.log('Connected to MongoDB Server:')
+    const db = client.db("employeesDB");
+    const employeesCollection = db.collection('employees');
 
-  // Body Parser ----------------------------------------------------------------
+    // Body Parser ----------------------------------------------------------------
     /*
     Body-parser: is a middleware that helps express handle reading data from the <form> element.
     npm install body-parser --save
@@ -61,11 +61,11 @@ MongoClient.connect(CONNECTION_STRING)
 
       // Add items to collection
       employeesCollection.insertOne(req.body)
-      .then(result => {
-        // redirect browser
-        res.redirect('/');
-      })
-      .catch(err => console.error(err))
+        .then(result => {
+          // redirect browser
+          res.redirect('/');
+        })
+        .catch(err => console.error(err))
     });
     // ----------------------------------------------------------------------------
 
@@ -93,16 +93,15 @@ MongoClient.connect(CONNECTION_STRING)
       // const allEmployees = db.collection('employees').find();
       // Makes no sense logged
       // console.log(allEmployees);
-      
+
       // Convert data to array
-      const allEmployees = db.collection('employees').find()
-      .toArray()
-      .then(results => {
-        console.log(results);
-      })
-      .catch(err => console.error(err));
-      // Render ejs
-      res.render('index.ejs', {})
+      db.collection('employees').find()
+        .toArray()
+        .then(results => {
+          // Render ejs
+          res.render('index.ejs', { employees: results })
+        })
+        .catch(err => console.error(err));
 
     });
     // ----------------------------------------------------------------------------
@@ -112,11 +111,11 @@ MongoClient.connect(CONNECTION_STRING)
 
     // Delete ---------------------------------------------------------------------
     // ----------------------------------------------------------------------------
-})
-.catch(error => { console.error(error)})
+  })
+  .catch(error => { console.error(error) })
 
 // Listen for server on port localhost:3000
-app.listen(PORT, function() {
+app.listen(PORT, function () {
   console.log(`Listening on localhost:${PORT}`)
 });
 

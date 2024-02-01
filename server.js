@@ -61,11 +61,11 @@ MongoClient.connect(CONNECTION_STRING)
 
       // Add items to collection
       quotesCollection.insertOne(req.body)
-      .then(result => {
-        // redirect browser
-        res.redirect('/');
-      })
-      .catch(err => console.error(err))
+        .then(result => {
+          // redirect browser
+          res.redirect('/');
+        })
+        .catch(err => console.error(err))
     });
     // ----------------------------------------------------------------------------
 
@@ -93,16 +93,16 @@ MongoClient.connect(CONNECTION_STRING)
       // const allQuotes = db.collection('quotes').find();
       // Makes no sense logged
       // console.log(allQuotes);
-      
+
       // Convert data to array
-      const allQuotes = db.collection('quotes').find()
-      .toArray()
-      .then(results => {
-        console.log(results);
-      })
-      .catch(err => console.error(err));
-      // Render ejs
-      res.render('index.ejs', {})
+      db.collection('quotes').find()
+        .toArray()
+        .then(results => {
+          console.log(results);
+          // Render ejs
+          res.render('index.ejs', { quotes: results })
+        })
+        .catch(err => console.error(err));
 
     });
     // ----------------------------------------------------------------------------
@@ -114,10 +114,10 @@ MongoClient.connect(CONNECTION_STRING)
     // ----------------------------------------------------------------------------
 
   })
-.catch(error => console.error(error));
+  .catch(error => console.error(error));
 
 // Listen for server on port localhost:3000
-app.listen(PORT, function() {
+app.listen(PORT, function () {
   console.log(`Listening on localhost:${PORT}`)
 });
 

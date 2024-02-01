@@ -56,12 +56,12 @@ MongoClient.connect(CONNECTION_STRING)
     See: Body-parser
     */
 
-    app.post('/quotes', (req, res) => {
+    app.post('/posts', (req, res) => {
       // console.log('This is a POST request');
       // console.log(req.body)
 
       // Add items to collection
-      quotesCollection.insertOne(req.body)
+      postsCollection.insertOne(req.body)
         .then(result => {
           // redirect browser
           res.redirect('/');
@@ -90,20 +90,18 @@ MongoClient.connect(CONNECTION_STRING)
       // console.log(__dirname)
       // res.sendFile(__dirname + '/index.html')
 
-      // Get quotes from database
-      // const allQuotes = db.collection('quotes').find();
+      // Get posts from database
+      // const allPosts = db.collection('posts').find();
       // Makes no sense logged
-      // console.log(allQuotes);
+      // console.log(allPosts);
 
       // Convert data to array
-      const allQuotes = db.collection('quotes').find()
+      db.collection('posts').find()
         .toArray()
         .then(results => {
-          console.log(results);
+          res.render('index.ejs', { posts: results});
         })
         .catch(err => console.error(err));
-        // Render ejs
-        res.render('index.ejs', {});
 
     });
     // ----------------------------------------------------------------------------

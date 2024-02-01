@@ -96,14 +96,13 @@ MongoClient.connect(CONNECTION_STRING)
       // console.log(allTasks);
 
       // Convert data to array
-      const allTasks = db.collection('tasks').find()
+      db.collection('tasks').find()
         .toArray()
         .then(results => {
-          console.log(results);
+          // Render ejs
+          res.render('index.ejs', { tasks: results })
         })
         .catch(err => console.error(err));
-        // Render ejs
-        res.render('index.ejs', {});
 
     });
     // ----------------------------------------------------------------------------
