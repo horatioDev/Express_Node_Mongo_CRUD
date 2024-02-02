@@ -59,10 +59,8 @@
 							</p>
 						</section>
 						<div class="crud-buttons">
-							<!-- <a href="/edit/<%= post._id %>" class="btn btn-primary">Edit</a>
-								<a href="/delete/<%= post._id %>" class="btn btn-primary">Delete</a> -->
-							<button id="btn update-btn">Update</button>
-							<button id="btn delete-btn">Delete</button>
+							<button data-id="<%= post._id%>" class="btn" id="update-btn">Update</button>
+							<button class="btn" id="delete-btn">Delete</button>
 						</div>
 					</section>
 				</li>
@@ -73,7 +71,7 @@
 	</ul>
 	<!-- <%= posts %> -->
 
-	<script type="text/javascript" src="js/main.js"></script>
+	<script src="/main.js"></script>
 </body>
 
 </html>

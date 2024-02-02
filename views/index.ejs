@@ -43,15 +43,15 @@
 					<li class="quote">
 						<section class="entry">
 							<section class="info">
+								<span> <%= quote.author %> -</span>
 								<q>
 									<%= quote.quote %>
-								</q>
-								<span>- <%= quote.author %></span> <br />
+								</q><br />
 								<small>Category: <%= quote.category %></small> <br />
 							</section>
 							<div class="crud-buttons">
-								<button id="btn update-btn">Update</button>
-								<button id="btn delete-btn">Delete</button>
+								<button data-id="<%= quote._id %>" class="btn btn-success" id="update-btn">Update</button>
+								<button class="btn" id="delete-btn">Delete</button>
 							</div>
 						</section>
 					</li>
@@ -61,6 +61,6 @@
 			<%}%>
 		</ul>		
 
-		<script type="text/javascript" src="js/main.js"></script>
+		<script src="/main.js"></script>
 	</body>
 </html>
