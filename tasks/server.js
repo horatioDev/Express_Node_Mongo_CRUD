@@ -5,8 +5,8 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MongoClient = require('mongodb').MongoClient;
+const ObjectId = require('mongodb').ObjectId;
 const password = require('./password');
-const { isError } = require('util');
 const PASSWORD = password.getPassword()
 const CONNECTION_STRING = `mongodb+srv://tasks:${PASSWORD}@tasks-cluster.fnjlht6.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -38,6 +38,11 @@ MongoClient.connect(CONNECTION_STRING)
     app.delete()
     */
     app.use(bodyParser.urlencoded({ extended: true }));
+    // Read JSON --------------------------------------------------------------
+    app.use(bodyParser.json());
+    //  Serve Static Files ----------------------------------------------------
+    app.use(express.static('public'));
+    
     // ----------------------------------------------------------------------------
 
     // Create ---------------------------------------------------------------------
@@ -87,6 +92,7 @@ MongoClient.connect(CONNECTION_STRING)
     app.get('/', (req, res) => {handle get req})
     */
 
+    // Home page
     app.get('/', (req, res) => {
       // Let'serve index.html
       // __dirname is the current directory you're in. 
@@ -108,12 +114,45 @@ MongoClient.connect(CONNECTION_STRING)
         .catch(err => console.error(err));
 
     });
+
+    // Get all tasks
+    app.get('/tasks', (req, res) => {
+      res.send('Tasks')
+    })
+
+    // Get update form pre-filled
+    app.get('/tasks/:id/edit', (req,res) => {
+      let taskId = req.params.id;
+      let taskQuery = { _id: new ObjectId(taskId)};
+      console.log(taskId);
+      // res.send(`Editing task: ${taskId}`);
+      db.collection("tasks").findOne(taskQuery)
+       .then((result) =>{
+         //console.log(result);
+         if(!result){
+           res.redirect("/")
+         } else {
+           res.render("edit-task.ejs", {pageTitle:"Edit Task", task: result})
+         }
+       }).catch((err)=>{
+         console.log(err);
+         res.status(500).send('Internal Server Error')
+       })
+    });
+
+
     // ----------------------------------------------------------------------------
 
-    // Update ---------------------------------------------------------------------
+    // Update -----------------------------------------------------------------
+    app.put('/tasks', (req,res) => {
+      console.log('UDR:', req.body)
+    });
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
+    app.delete('/tasks', (req,res) => {
+      console.log('DRR:', req.body)
+    });
     // ----------------------------------------------------------------------------
   })
   .catch(error => { console.error(error) })

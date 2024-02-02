@@ -1,9 +1,10 @@
 // Create server for browser use w/ express
 const express = require('express');
+const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
-const app = express();
 const PORT = process.env.PORT || 3000;
+const ObjectId = require('mongodb').ObjectId;
 const MongoClient = require('mongodb').MongoClient;
 // Import password
 const password = require("./password");
@@ -38,6 +39,11 @@ MongoClient.connect(CONNECTION_STRING)
     app.delete()
     */
     app.use(bodyParser.urlencoded({ extended: true }));
+    // Read JSON --------------------------------------------------------------
+    app.use(bodyParser.json());
+    //  Serve Static Files ----------------------------------------------------
+    app.use(express.static('public'));
+    
     // ----------------------------------------------------------------------------
 
     // Create ---------------------------------------------------------------------
@@ -87,6 +93,7 @@ MongoClient.connect(CONNECTION_STRING)
     app.get('/', (req, res) => {handle get req})
     */
 
+    // Home page
     app.get('/', (req, res) => {
       // Let'serve index.html
       // __dirname is the current directory you're in. 
@@ -107,12 +114,43 @@ MongoClient.connect(CONNECTION_STRING)
         .catch(err => console.error(err));
 
     });
+
+    // Get all posts
+    app.get('/posts', (req, res) => {
+      res.send('Posts')
+    })
+
+    // Get update form pre-filled
+    app.get('/posts/:id/edit', (req,res) => {
+      let postId = req.params.id;
+      let postQuery = { _id: new ObjectId(postId)};
+      console.log(postId);
+      // res.send(`Editing post: ${postId}`);
+      db.collection("posts").findOne(postQuery)
+       .then((result) =>{
+         //console.log(result);
+         if(!result){
+           res.redirect("/")
+         } else {
+           res.render("edit-post.ejs", {pageTitle:"Edit Post", post: result})
+         }
+       }).catch((err)=>{
+         console.log(err);
+         res.status(500).send('Internal Server Error')
+       })
+    });
     // ----------------------------------------------------------------------------
 
-    // Update ---------------------------------------------------------------------
+    // Update -----------------------------------------------------------------
+    app.put('/posts/:id', (req,res) => {
+      console.log('UDR:', req.body)
+    });
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
+    app.delete('/posts', (req,res) => {
+      console.log('DRR:', req.body)
+    });
     // ----------------------------------------------------------------------------
   })
   .catch(error => { console.error(error) })

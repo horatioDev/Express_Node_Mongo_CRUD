@@ -5,6 +5,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MongoClient = require('mongodb').MongoClient;
+const ObjectId = require('mongodb').ObjectId;
 const password = require('./password.js');
 const PASSWORD = password.getPassword();
 const CONNECTION_STRING = `mongodb+srv://employees:${PASSWORD}@employees-cluster.lex1ez3.mongodb.net/?retryWrites=true&w=majority`;
@@ -37,6 +38,11 @@ MongoClient.connect(CONNECTION_STRING)
     app.delete()
     */
     app.use(bodyParser.urlencoded({ extended: true }));
+    // Read JSON --------------------------------------------------------------
+    app.use(bodyParser.json());
+    //  Serve Static Files ----------------------------------------------------
+    app.use(express.static('public'));
+    
     // ----------------------------------------------------------------------------
 
     // Create ---------------------------------------------------------------------
@@ -107,12 +113,44 @@ MongoClient.connect(CONNECTION_STRING)
         .catch(err => console.error(err));
 
     });
+
+    // Get all employees
+    app.get('/employees', (req, res) => {
+      res.send('Employees')
+    })
+
+    // Get update form pre-filled
+    app.get('/employees/:id/edit', (req,res) => {
+      let employeeId = req.params.id;
+      let employeeQuery = { _id: new ObjectId(employeeId)};
+      console.log(employeeId);
+      // res.send(`Editing employee: ${employeeId}`);
+      db.collection("employees").findOne(employeeQuery)
+       .then((result) =>{
+         //console.log(result);
+         if(!result){
+           res.redirect("/")
+         } else {
+           res.render("edit-employee.ejs", {pageTitle:"Edit Employee", employee: result})
+         }
+       }).catch((err)=>{
+         console.log(err);
+         res.status(500).send('Internal Server Error')
+       })
+    });
     // ----------------------------------------------------------------------------
 
-    // Update ---------------------------------------------------------------------
+    // Update -----------------------------------------------------------------
+    app.put('/employees/:id', (req,res) => {
+      console.log('UDR:', req.body)
+    });
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
+    app.delete('/employees', (req,res) => {
+      console.log('DRR:', req.body)
+    });
+    // ----------------------------------------------------------------------------
     // ----------------------------------------------------------------------------
   })
   .catch(error => { console.error(error) })

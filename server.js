@@ -1,8 +1,9 @@
 // Create server for browser use w/ express
 const express = require('express');
-const bodyParser = require('body-parser')
 const app = express();
+const bodyParser = require('body-parser')
 const PORT = process.env.PORT || 3000;
+const ObjectId = require('mongodb').ObjectId;
 const MongoClient = require('mongodb').MongoClient;
 // Import password
 const password = require('./password.js');
@@ -18,7 +19,8 @@ MongoClient.connect(CONNECTION_STRING)
 
     // we need to set view engine to ejs. This tells Express we’re using EJS as the template engine
     app.set('view engine', 'ejs');
-    // Body Parser ----------------------------------------------------------------
+  
+    // Body Parser -----------------------------------------------------------
     /*
     Body-parser: is a middleware that helps express handle reading data from the <form> element.
     npm install body-parser --save
@@ -36,6 +38,11 @@ MongoClient.connect(CONNECTION_STRING)
     app.delete()
     */
     app.use(bodyParser.urlencoded({ extended: true }));
+    // Read JSON --------------------------------------------------------------
+    app.use(bodyParser.json());
+    //  Serve Static Files ----------------------------------------------------
+    app.use(express.static('public'));
+    
     // ----------------------------------------------------------------------------
 
     // Create ---------------------------------------------------------------------
@@ -85,6 +92,7 @@ MongoClient.connect(CONNECTION_STRING)
     app.get('/', (req, res) => {handle get req})
     */
 
+    // Home page
     app.get('/', (req, res) => {
       // Let'serve index.html
       // __dirname is the current directory you're in. 
@@ -107,12 +115,73 @@ MongoClient.connect(CONNECTION_STRING)
         .catch(err => console.error(err));
 
     });
+
+    // Get all quotes
+    app.get('/quotes', (req, res) => {
+      res.send('Quotes')
+    })
+
+    // Get update form pre-filled
+    app.get('/quotes/:id/edit', (req,res) => {
+      let quoteId = req.params.id;
+      let quoteQuery = { _id: new ObjectId(quoteId)};
+      console.log(quoteId);
+      // res.send(`Editing Quote: ${quoteId}`);
+      db.collection("quotes").findOne(quoteQuery)
+       .then((result) =>{
+         //console.log(result);
+         if(!result){
+           res.redirect("/")
+         } else {
+           res.render("edit-quote.ejs", {pageTitle:"Edit Quote", quote: result})
+         }
+       }).catch((err)=>{
+         console.log(err);
+         res.status(500).send('Internal Server Error')
+       })
+    });
+
+  // Handle Update logic
+  //  app.post('/quotes/:id/update', (req, res) => {
+  //    let updatedQuote = req.body;
+  //    delete updatedQuote.submit;
+  //    console.log(updatedQuote);
+  //    const id = req.params.id;
+  //    db.collection("quotes").updateOne({ _id: new ObjectID(id)}, {$set: updatedQuote}, function(err, result) {
+  //    db.collection("quotes").findOneAndUpdate({ _id : new ObjectID(id)}, 
+  //                           {$set: updatedQuote}, {useFindAndModify: false} )
+  //    .then(()=>{
+  //      res.redirect('/');
+  //    })
+  //    .catch((err)=> {
+  //      console.log(err);
+  //      res.send("Error updating quote");
+  //    });
+  //  });
+  //     res.render('edit-quote.ejs', {  _id: quoteId});
+  //     // res.sendFile(__dirname + '/index.html')
+  //     // db.collection('quotes').find({_id: quoteId}, (err, quote) => {
+  //     //   if (err) {
+  //     //     console.error("Error fetching quote from database:", err);
+  //     //     res.status(500).send("Error fetching quote from database");
+  //     //     return;
+  //     //   }
+  //     //   console.log('result', result);
+  //     //   res.render('edit-quote.ejs', { quote });
+  //     // });
+  //   });
     // ----------------------------------------------------------------------------
 
-    // Update ---------------------------------------------------------------------
+    // Update -----------------------------------------------------------------
+    app.put('/quotes/:id', (req,res) => {
+      console.log('UDR:', req.body)
+    });
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
+    app.delete('/quotes', (req,res) => {
+      console.log('DRR:', req.body)
+    });
     // ----------------------------------------------------------------------------
 
   })

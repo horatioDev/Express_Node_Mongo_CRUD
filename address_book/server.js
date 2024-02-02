@@ -1,13 +1,14 @@
 // Create server for browser use w/ express
 const express = require('express');
-const bodyParser = require('body-parser');
 const app = express();
+const bodyParser = require('body-parser');
 const PORT = process.env.PORT || 3000;
+const ObjectId = require('mongodb').ObjectId;
 const MongoClient = require('mongodb').MongoClient;
 // Import password
 const password = require('./password.js');
 const PASSWORD = password.getPassword();
-const CONNECTION_STRING = `mongodb+srv://contacts:${PASSWORD}@contacts-cluster.xsvvs0g.mongodb.net/?retryWrites=true&w=majority}`;
+const CONNECTION_STRING = `mongodb+srv://contacts:${PASSWORD}@contacts-cluster.xsvvs0g.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create Database Client Connection 
 MongoClient.connect(CONNECTION_STRING)
@@ -37,6 +38,11 @@ MongoClient.connect(CONNECTION_STRING)
     app.delete()
     */
     app.use(bodyParser.urlencoded({ extended: true }));
+    // Read JSON --------------------------------------------------------------
+    app.use(bodyParser.json());
+    //  Serve Static Files ----------------------------------------------------
+    app.use(express.static('public'));
+    
     // ----------------------------------------------------------------------------
 
     // Create ---------------------------------------------------------------------
@@ -86,6 +92,7 @@ MongoClient.connect(CONNECTION_STRING)
     app.get('/', (req, res) => {handle get req})
     */
 
+    // Home Page
     app.get('/', (req, res) => {
       // Let'serve index.html
       // __dirname is the current directory you're in. 
@@ -107,12 +114,44 @@ MongoClient.connect(CONNECTION_STRING)
         .catch(err => console.error(err));
 
     });
+
+
+    // Get all contacts
+    app.get('/contacts', (req, res) => {
+      res.send('contacts')
+    })
+
+    // Get update form pre-filled
+    app.get('/contacts/:id/edit', (req,res) => {
+      let contactId = req.params.id;
+      let contactQuery = { _id: new ObjectId(contactId)};
+      console.log(contactId);
+      // res.send(`Editing contact: ${contactId}`);
+      db.collection("contacts").findOne(contactQuery)
+       .then((result) =>{
+         //console.log(result);
+         if(!result){
+           res.redirect("/")
+         } else {
+           res.render("edit-contact.ejs", {pageTitle:"Edit contact", contact: result})
+         }
+       }).catch((err)=>{
+         console.log(err);
+         res.status(500).send('Internal Server Error')
+       })
+    });
     // ----------------------------------------------------------------------------
 
-    // Update ---------------------------------------------------------------------
+    // Update -----------------------------------------------------------------
+    app.put('/contacts/:id', (req,res) => {
+      console.log('UDR:', req.body)
+    });
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
+    app.delete('/contacts', (req,res) => {
+      console.log('DRR:', req.body)
+    });
     // ----------------------------------------------------------------------------
   })
   .catch(error => { console.error(error) });
