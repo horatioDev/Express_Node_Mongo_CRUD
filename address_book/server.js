@@ -10,6 +10,9 @@ const password = require('./password.js');
 const PASSWORD = password.getPassword();
 const CONNECTION_STRING = `mongodb+srv://contacts:${PASSWORD}@contacts-cluster.xsvvs0g.mongodb.net/?retryWrites=true&w=majority`;
 
+
+
+// Create Database Client Connection 
 MongoClient.connect(CONNECTION_STRING)
   .then(client => {
     console.log('Connected to MongoDB Server')
@@ -57,8 +60,8 @@ MongoClient.connect(CONNECTION_STRING)
     method: tells the browser what kind of request to send: POST
     name: Descriptive name
     
-    We can handle this POST request with a post method in server.js. The path should be the value you placed in the action attribute.
-    app.post('/path', (req, res) => { handle post req});
+    We can handle this POST request with a contact method in server.js. The path should be the value you placed in the action attribute.
+    app.post('/path', (req, res) => { handle contact req});
     
     See: Body-parser
     */
@@ -71,7 +74,6 @@ MongoClient.connect(CONNECTION_STRING)
       // Add the received contact to the database collection
       contactsCollection.insertOne(req.body)
         .then(result => {
-          console.log('rb2', result)
           // Redirect the browser to the home page after successfully adding the contact
           res.redirect('/');
         })
@@ -83,14 +85,16 @@ MongoClient.connect(CONNECTION_STRING)
 
     // API:---------------------
     app.post('/api', (req, res) => {
-      
+      // Log the request body
+      console.log('rb', req.body);
+
       // Add the received contact to the database collection
       contactsCollection.insertOne(req.body)
         .then(result => {
           // Send back the inserted document as JSON
           res.json(req.body);
+          console.log('rb2', result, req.body)
           // Redirect the browser to the home page after successfully adding the contact
-          // res.redirect('/');
         })
         .catch(err => {
           // Log any errors to the console
@@ -98,6 +102,7 @@ MongoClient.connect(CONNECTION_STRING)
         });
     });
     // ---------------------------
+
     // ----------------------------------------------------------------------------
 
     // Read -----------------------------------------------------------------------
@@ -195,6 +200,32 @@ MongoClient.connect(CONNECTION_STRING)
     });
     // ------------------------
 
+    // GET route for retrieving all contacts
+    app.get('/contacts', (req, res) => {
+      // Retrieve all contacts from the database collection
+      contactsCollection.find()
+        .toArray()
+        .then(results => {
+          // Log the results to the console
+          console.log(results);
+
+          // Check if there are no results
+          if (!results) {
+            // If no results found, send a 404 status with a JSON response
+            return res.status(404).json({ message: 'No Results' });
+          } else {
+            // If results found, send a 200 status with a JSON response containing the results
+            res.status(200).json(results);
+          }
+        })
+        .catch(err => {
+          // Log any errors to the console and send a 500 status with a JSON response containing the error
+          console.error(err);
+          res.status(500).json({ error: err })
+        })
+    });
+
+
     // Route to retrieve all contacts by ID
     app.get('/contacts/:id', (req, res) => {
       // Extract the contact ID from the request parameters
@@ -225,30 +256,36 @@ MongoClient.connect(CONNECTION_STRING)
         });
     });
 
-    // GET route for retrieving all contacts
-    app.get('/contacts', (req, res) => {
-      // Retrieve all contacts from the database collection
-      contactsCollection.find()
-        .toArray()
-        .then(results => {
-          // Log the results to the console
-          console.log(results);
+    // Route to retrieve all contacts by ID
+    app.get('/api/contacts/:id', (req, res) => {
+      // Extract the contact ID from the request parameters
+      let contactId = req.params.id;
 
-          // Check if there are no results
-          if (!results) {
-            // If no results found, send a 404 status with a JSON response
-            return res.status(404).json({ message: 'No Results' });
+      // Define the query to find the contact by its ID
+      let contactQuery = { _id: new ObjectId(contactId) };
+
+      // Use findOne to find the contact in the database
+      contactsCollection.findOne(contactQuery)
+        .then((result) => {
+          // Log the result to the console
+          // console.log('r', result);
+
+          // Check if the contact is not found
+          if (!result) {
+            // If contact is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find contact with ID ${contactId}` });
           } else {
-            // If results found, send a 200 status with a JSON response containing the results
-            res.status(200).json(results);
+            // If the contact is found, send a 200 status with a JSON response containing the contact
+            res.status(200).json(result);
           }
         })
-        .catch(err => {
-          // Log any errors to the console and send a 500 status with a JSON response containing the error
-          console.error(err);
-          res.status(500).json({ error: err })
-        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
     });
+
 
     // GET route for editing a specific contact
     app.get('/contacts/:id/edit', (req, res) => {
@@ -259,7 +296,7 @@ MongoClient.connect(CONNECTION_STRING)
       let contactQuery = { _id: new ObjectId(contactId) };
 
       // Log the contact ID to the console
-      console.log(contactId);
+      console.log(contactId, contactQuery);
 
       // Use findOne to find the contact in the database
       contactsCollection.findOne(contactQuery)
@@ -272,17 +309,12 @@ MongoClient.connect(CONNECTION_STRING)
             // If contact is not found, send a 404 status with a JSON response and redirect to the home page
             return res.status(404).json({ message: `Cannot find contact with ID ${contactId}` }).redirect("/");
           } else {
-            // If the contact is found
 
-            // Check if the request's accept header indicates JSON format
-            const acceptHeader = req.headers['accept'];
-            if (acceptHeader && acceptHeader.includes('application/json')) {
-              // If JSON format is requested, send a 200 status with a JSON response containing the contact
-              return res.status(200).json(result);
-            } else {
-              // If HTML format is requested, render the edit-contact.ejs template with the contact data
-              res.render("edit-contact.ejs", { contact: result });
-            }
+            // If HTML format is requested, render the edit-contact.ejs template with the contact data
+            res.render("edit-contact.ejs", { contact: result });
+            // If JSON format is requested, send a 200 status with a JSON response containing the contact
+            res.status(200).json(result);
+
           }
         })
         .catch((err) => {
@@ -333,9 +365,9 @@ MongoClient.connect(CONNECTION_STRING)
 
       contactsCollection.findOneAndUpdate(contactQuery, { $set: contactData }, { upsert: true, returnOriginal: false })
         .then((result) => {
-          console.log("updateResult",);
+          console.log("updateResult", contactData);
           // res.send({contactData})
-          result = Object.assign({}, contactQuery, { category: req.body.category, author: req.body.author, contact: req.body.contact });
+          result = Object.assign({}, contactQuery, contactData);
           if (!result) {
             return res.status(404).json({ message: `Cannot update contact with ID ${contactId}` });
           } else {
@@ -380,8 +412,53 @@ MongoClient.connect(CONNECTION_STRING)
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
-    app.delete('/contacts', (req, res) => {
+    app.delete('/contacts/:id/delete', (req, res) => {
       console.log('DRR:', req.body)
+      const contactId = req.params.id;
+      const contactQuery = { _id: new ObjectId(contactId) };
+      const contactData = req.body;
+      console.log('Delete Contact Data:', contactData);
+
+      contactsCollection.deleteOne(contactQuery, contactData)
+        .then(result => {
+          console.log('Delete Contact Data:', contactData);
+          console.log('dr', { ...result })
+          if (result.deletedCount === 0) {
+            res.json({ message: 'No record of that contact was found.' });
+          } else {
+            console.log('Deleted', result, contactData);
+            res.status(200).json(result)
+          }
+        })
+        .catch((e) => {
+          console.error(`Error deleting contact ${contactId}`, e);
+          res.status(500).send('Server error');
+        });
+    });
+
+
+    app.delete('/api/contacts/:id/delete', (req, res) => {
+      console.log('DRR:', req.body)
+      const contactId = req.params.id;
+      const contactQuery = { _id: new ObjectId(contactId) };
+      const contactData = req.body;
+      console.log('Delete Contact Data:', contactData);
+
+      contactsCollection.deleteOne(contactQuery, contactData)
+        .then(result => {
+          console.log('Delete Contact Data:', contactData);
+          console.log('dr', { ...result })
+          if (result.deletedCount === 0) {
+            res.json({ message: 'No record of that contact was found.' });
+          } else {
+            console.log('Deleted', result, contactData);
+            res.status(200).json(result)
+          }
+        })
+        .catch((e) => {
+          console.error(`Error deleting contact ${contactId}`, e);
+          res.status(500).send('Server error');
+        });
     });
     // ----------------------------------------------------------------------------
 
@@ -391,6 +468,28 @@ MongoClient.connect(CONNECTION_STRING)
     });
   })
   .catch(error => console.error(error));
+
+// Run server
+// cd working_dir && node server.js
+// ----------------------------------------------------------------------------
+
+// Nodemon --------------------------------------------------------------------
+/*
+Nodemon: restarts the server automatically when you save a file that’s used by the server.js. 
+npm install nodemon --save-dev
+
+Update script in package.json
+"scripts": {
+  "dev": "nodemon server.js"
+}
+
+npm run dev to trigger nodemon server.js
+*/
+
+// ----------------------------------------------------------------------------
+
+// Test server
+console.log('Contacts:  Create, Read, Update & Delete');
 
 
 // Run server

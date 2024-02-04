@@ -73,7 +73,6 @@ MongoClient.connect(CONNECTION_STRING)
       // Add the received quote to the database collection
       quotesCollection.insertOne(req.body)
         .then(result => {
-          console.log('rb2', result)
           // Redirect the browser to the home page after successfully adding the quote
           res.redirect('/');
         })
@@ -200,6 +199,32 @@ MongoClient.connect(CONNECTION_STRING)
     });
     // ------------------------
 
+     // GET route for retrieving all quotes
+    app.get('/quotes', (req, res) => {
+      // Retrieve all quotes from the database collection
+      quotesCollection.find()
+        .toArray()
+        .then(results => {
+          // Log the results to the console
+          console.log(results);
+
+          // Check if there are no results
+          if (!results) {
+            // If no results found, send a 404 status with a JSON response
+            return res.status(404).json({ message: 'No Results' });
+          } else {
+            // If results found, send a 200 status with a JSON response containing the results
+            res.status(200).json(results);
+          }
+        })
+        .catch(err => {
+          // Log any errors to the console and send a 500 status with a JSON response containing the error
+          console.error(err);
+          res.status(500).json({ error: err })
+        })
+    });
+
+
     // Route to retrieve all quotes by ID
     app.get('/quotes/:id', (req, res) => {
       // Extract the quote ID from the request parameters
@@ -229,32 +254,38 @@ MongoClient.connect(CONNECTION_STRING)
           res.status(500).json({ error: 'Internal Server Error' });
         });
     });
+    
+    // Route to retrieve all quotes by ID
+    app.get('/api/quotes/:id', (req, res) => {
+      // Extract the quote ID from the request parameters
+      let quoteId = req.params.id;
 
-    // GET route for retrieving all quotes
-    app.get('/quotes', (req, res) => {
-      // Retrieve all quotes from the database collection
-      quotesCollection.find()
-        .toArray()
-        .then(results => {
-          // Log the results to the console
-          console.log(results);
+      // Define the query to find the quote by its ID
+      let quoteQuery = { _id: new ObjectId(quoteId) };
 
-          // Check if there are no results
-          if (!results) {
-            // If no results found, send a 404 status with a JSON response
-            return res.status(404).json({ message: 'No Results' });
+      // Use findOne to find the quote in the database
+      quotesCollection.findOne(quoteQuery)
+        .then((result) => {
+          // Log the result to the console
+          // console.log('r', result);
+
+          // Check if the quote is not found
+          if (!result) {
+            // If quote is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find quote with ID ${quoteId}` });
           } else {
-            // If results found, send a 200 status with a JSON response containing the results
-            res.status(200).json(results);
+            // If the quote is found, send a 200 status with a JSON response containing the quote
+            res.status(200).json(result);
           }
         })
-        .catch(err => {
-          // Log any errors to the console and send a 500 status with a JSON response containing the error
-          console.error(err);
-          res.status(500).json({ error: err })
-        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
     });
 
+   
     // GET route for editing a specific quote
     app.get('/quotes/:id/edit', (req, res) => {
       // Extract the quote ID from the request parameters
@@ -338,7 +369,7 @@ MongoClient.connect(CONNECTION_STRING)
 
       quotesCollection.findOneAndUpdate(quoteQuery, { $set: quoteData }, { upsert: true, returnOriginal: false })
         .then((result) => {
-          console.log("updateResult",);
+          console.log("updateResult",quoteData);
           // res.send({quoteData})
           result = Object.assign({}, quoteQuery, quoteData);
           if (!result) {
@@ -366,7 +397,7 @@ MongoClient.connect(CONNECTION_STRING)
         .then((result) => {
           console.log("updateResult",);
           // res.send({quoteData})
-          result = Object.assign({}, quoteQuery, { category: req.body.category, author: req.body.author, quote: req.body.quote });
+          result = Object.assign({}, quoteQuery, quoteData);
           if (!result) {
             return res.status(404).json({ message: `Cannot update quote with ID ${quoteId}` });
           } else {
@@ -385,8 +416,53 @@ MongoClient.connect(CONNECTION_STRING)
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
-    app.delete('/quotes', (req, res) => {
+    app.delete('/quotes/:id/delete', (req, res) => {
       console.log('DRR:', req.body)
+      const quoteId = req.params.id;
+      const quoteQuery = { _id: new ObjectId(quoteId) };
+      const quoteData = req.body;
+      console.log('Delete Quote Data:', quoteData);
+      
+      quotesCollection.deleteOne(quoteQuery, quoteData)
+      .then(result => {
+        console.log('Delete Quote Data:', quoteData);
+        console.log('dr',{...result})
+        if (result.deletedCount === 0) {
+          res.json({message: 'No record of that quote was found.'});
+        } else {
+          console.log('Deleted', result, quoteData);
+          res.status(200).json(result)
+        }
+      })
+      .catch((e) => {
+        console.error(`Error deleting quote ${quoteId}`, e);
+        res.status(500).send('Server error');
+      });
+    });
+    
+    
+    app.delete('/api/quotes/:id/delete', (req, res) => {
+      console.log('DRR:', req.body)
+      const quoteId = req.params.id;
+      const quoteQuery = { _id: new ObjectId(quoteId) };
+      const quoteData = req.body;
+      console.log('Delete Quote Data:', quoteData);
+      
+      quotesCollection.deleteOne(quoteQuery, quoteData)
+      .then(result => {
+        console.log('Delete Quote Data:', quoteData);
+        console.log('dr',{...result})
+        if (result.deletedCount === 0) {
+          res.json({message: 'No record of that quote was found.'});
+        } else {
+          console.log('Deleted', result, quoteData);
+          res.status(200).json(result)
+        }
+      })
+      .catch((e) => {
+        console.error(`Error deleting quote ${quoteId}`, e);
+        res.status(500).send('Server error');
+      });
     });
     // ----------------------------------------------------------------------------
 

@@ -10,6 +10,7 @@ const password = require("./password");
 const PASSWORD = password.getPassword();
 const CONNECTION_STRING = `mongodb+srv://posts:${PASSWORD}@posts-cluster.suvwexw.mongodb.net/?retryWrites=true&w=majority`;
 
+// Create Database Client Connection 
 MongoClient.connect(CONNECTION_STRING)
   .then(client => {
     console.log('Connected to MongoDB Server')
@@ -71,7 +72,6 @@ MongoClient.connect(CONNECTION_STRING)
       // Add the received post to the database collection
       postsCollection.insertOne(req.body)
         .then(result => {
-          console.log('rb2', result)
           // Redirect the browser to the home page after successfully adding the post
           res.redirect('/');
         })
@@ -83,14 +83,16 @@ MongoClient.connect(CONNECTION_STRING)
 
     // API:---------------------
     app.post('/api', (req, res) => {
-      
+      // Log the request body
+      console.log('rb', req.body);
+
       // Add the received post to the database collection
       postsCollection.insertOne(req.body)
         .then(result => {
           // Send back the inserted document as JSON
           res.json(req.body);
+          console.log('rb2', result, req.body)
           // Redirect the browser to the home page after successfully adding the post
-          // res.redirect('/');
         })
         .catch(err => {
           // Log any errors to the console
@@ -98,6 +100,7 @@ MongoClient.connect(CONNECTION_STRING)
         });
     });
     // ---------------------------
+
     // ----------------------------------------------------------------------------
 
     // Read -----------------------------------------------------------------------
@@ -195,6 +198,32 @@ MongoClient.connect(CONNECTION_STRING)
     });
     // ------------------------
 
+    // GET route for retrieving all posts
+    app.get('/posts', (req, res) => {
+      // Retrieve all posts from the database collection
+      postsCollection.find()
+        .toArray()
+        .then(results => {
+          // Log the results to the console
+          console.log(results);
+
+          // Check if there are no results
+          if (!results) {
+            // If no results found, send a 404 status with a JSON response
+            return res.status(404).json({ message: 'No Results' });
+          } else {
+            // If results found, send a 200 status with a JSON response containing the results
+            res.status(200).json(results);
+          }
+        })
+        .catch(err => {
+          // Log any errors to the console and send a 500 status with a JSON response containing the error
+          console.error(err);
+          res.status(500).json({ error: err })
+        })
+    });
+
+
     // Route to retrieve all posts by ID
     app.get('/posts/:id', (req, res) => {
       // Extract the post ID from the request parameters
@@ -225,30 +254,36 @@ MongoClient.connect(CONNECTION_STRING)
         });
     });
 
-    // GET route for retrieving all posts
-    app.get('/posts', (req, res) => {
-      // Retrieve all posts from the database collection
-      postsCollection.find()
-        .toArray()
-        .then(results => {
-          // Log the results to the console
-          console.log(results);
+    // Route to retrieve all posts by ID
+    app.get('/api/posts/:id', (req, res) => {
+      // Extract the post ID from the request parameters
+      let postId = req.params.id;
 
-          // Check if there are no results
-          if (!results) {
-            // If no results found, send a 404 status with a JSON response
-            return res.status(404).json({ message: 'No Results' });
+      // Define the query to find the post by its ID
+      let postQuery = { _id: new ObjectId(postId) };
+
+      // Use findOne to find the post in the database
+      postsCollection.findOne(postQuery)
+        .then((result) => {
+          // Log the result to the console
+          // console.log('r', result);
+
+          // Check if the post is not found
+          if (!result) {
+            // If post is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find post with ID ${postId}` });
           } else {
-            // If results found, send a 200 status with a JSON response containing the results
-            res.status(200).json(results);
+            // If the post is found, send a 200 status with a JSON response containing the post
+            res.status(200).json(result);
           }
         })
-        .catch(err => {
-          // Log any errors to the console and send a 500 status with a JSON response containing the error
-          console.error(err);
-          res.status(500).json({ error: err })
-        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
     });
+
 
     // GET route for editing a specific post
     app.get('/posts/:id/edit', (req, res) => {
@@ -259,7 +294,7 @@ MongoClient.connect(CONNECTION_STRING)
       let postQuery = { _id: new ObjectId(postId) };
 
       // Log the post ID to the console
-      console.log(postId);
+      console.log(postId, postQuery);
 
       // Use findOne to find the post in the database
       postsCollection.findOne(postQuery)
@@ -272,17 +307,12 @@ MongoClient.connect(CONNECTION_STRING)
             // If post is not found, send a 404 status with a JSON response and redirect to the home page
             return res.status(404).json({ message: `Cannot find post with ID ${postId}` }).redirect("/");
           } else {
-            // If the post is found
 
-            // Check if the request's accept header indicates JSON format
-            const acceptHeader = req.headers['accept'];
-            if (acceptHeader && acceptHeader.includes('application/json')) {
-              // If JSON format is requested, send a 200 status with a JSON response containing the post
-              return res.status(200).json(result);
-            } else {
-              // If HTML format is requested, render the edit-post.ejs template with the post data
-              res.render("edit-post.ejs", { post: result });
-            }
+            // If HTML format is requested, render the edit-post.ejs template with the post data
+            res.render("edit-post.ejs", { post: result });
+            // If JSON format is requested, send a 200 status with a JSON response containing the post
+            res.status(200).json(result);
+
           }
         })
         .catch((err) => {
@@ -333,9 +363,9 @@ MongoClient.connect(CONNECTION_STRING)
 
       postsCollection.findOneAndUpdate(postQuery, { $set: postData }, { upsert: true, returnOriginal: false })
         .then((result) => {
-          console.log("updateResult",);
+          console.log("updateResult", postData);
           // res.send({postData})
-          result = Object.assign({}, postQuery, { category: req.body.category, author: req.body.author, post: req.body.post });
+          result = Object.assign({}, postQuery, postData);
           if (!result) {
             return res.status(404).json({ message: `Cannot update post with ID ${postId}` });
           } else {
@@ -380,8 +410,53 @@ MongoClient.connect(CONNECTION_STRING)
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
-    app.delete('/posts', (req, res) => {
+    app.delete('/posts/:id/delete', (req, res) => {
       console.log('DRR:', req.body)
+      const postId = req.params.id;
+      const postQuery = { _id: new ObjectId(postId) };
+      const postData = req.body;
+      console.log('Delete Post Data:', postData);
+
+      postsCollection.deleteOne(postQuery, postData)
+        .then(result => {
+          console.log('Delete Post Data:', postData);
+          console.log('dr', { ...result })
+          if (result.deletedCount === 0) {
+            res.json({ message: 'No record of that post was found.' });
+          } else {
+            console.log('Deleted', result, postData);
+            res.status(200).json(result)
+          }
+        })
+        .catch((e) => {
+          console.error(`Error deleting post ${postId}`, e);
+          res.status(500).send('Server error');
+        });
+    });
+
+
+    app.delete('/api/posts/:id/delete', (req, res) => {
+      console.log('DRR:', req.body)
+      const postId = req.params.id;
+      const postQuery = { _id: new ObjectId(postId) };
+      const postData = req.body;
+      console.log('Delete Post Data:', postData);
+
+      postsCollection.deleteOne(postQuery, postData)
+        .then(result => {
+          console.log('Delete Post Data:', postData);
+          console.log('dr', { ...result })
+          if (result.deletedCount === 0) {
+            res.json({ message: 'No record of that post was found.' });
+          } else {
+            console.log('Deleted', result, postData);
+            res.status(200).json(result)
+          }
+        })
+        .catch((e) => {
+          console.error(`Error deleting post ${postId}`, e);
+          res.status(500).send('Server error');
+        });
     });
     // ----------------------------------------------------------------------------
 

@@ -10,6 +10,7 @@ const password = require('./password.js');
 const PASSWORD = password.getPassword();
 const CONNECTION_STRING = `mongodb+srv://employees:${PASSWORD}@employees-cluster.lex1ez3.mongodb.net/?retryWrites=true&w=majority`;
 
+// Create Database Client Connection 
 MongoClient.connect(CONNECTION_STRING)
   .then(client => {
     console.log('Connected to MongoDB Server')
@@ -71,7 +72,6 @@ MongoClient.connect(CONNECTION_STRING)
       // Add the received employee to the database collection
       employeesCollection.insertOne(req.body)
         .then(result => {
-          console.log('rb2', result)
           // Redirect the browser to the home page after successfully adding the employee
           res.redirect('/');
         })
@@ -83,14 +83,16 @@ MongoClient.connect(CONNECTION_STRING)
 
     // API:---------------------
     app.post('/api', (req, res) => {
-      
+      // Log the request body
+      console.log('rb', req.body);
+
       // Add the received employee to the database collection
       employeesCollection.insertOne(req.body)
         .then(result => {
           // Send back the inserted document as JSON
           res.json(req.body);
+          console.log('rb2', result, req.body)
           // Redirect the browser to the home page after successfully adding the employee
-          // res.redirect('/');
         })
         .catch(err => {
           // Log any errors to the console
@@ -98,6 +100,7 @@ MongoClient.connect(CONNECTION_STRING)
         });
     });
     // ---------------------------
+
     // ----------------------------------------------------------------------------
 
     // Read -----------------------------------------------------------------------
@@ -195,6 +198,32 @@ MongoClient.connect(CONNECTION_STRING)
     });
     // ------------------------
 
+    // GET route for retrieving all employees
+    app.get('/employees', (req, res) => {
+      // Retrieve all employees from the database collection
+      employeesCollection.find()
+        .toArray()
+        .then(results => {
+          // Log the results to the console
+          console.log(results);
+
+          // Check if there are no results
+          if (!results) {
+            // If no results found, send a 404 status with a JSON response
+            return res.status(404).json({ message: 'No Results' });
+          } else {
+            // If results found, send a 200 status with a JSON response containing the results
+            res.status(200).json(results);
+          }
+        })
+        .catch(err => {
+          // Log any errors to the console and send a 500 status with a JSON response containing the error
+          console.error(err);
+          res.status(500).json({ error: err })
+        })
+    });
+
+
     // Route to retrieve all employees by ID
     app.get('/employees/:id', (req, res) => {
       // Extract the employee ID from the request parameters
@@ -225,30 +254,36 @@ MongoClient.connect(CONNECTION_STRING)
         });
     });
 
-    // GET route for retrieving all employees
-    app.get('/employees', (req, res) => {
-      // Retrieve all employees from the database collection
-      employeesCollection.find()
-        .toArray()
-        .then(results => {
-          // Log the results to the console
-          console.log(results);
+    // Route to retrieve all employees by ID
+    app.get('/api/employees/:id', (req, res) => {
+      // Extract the employee ID from the request parameters
+      let employeeId = req.params.id;
 
-          // Check if there are no results
-          if (!results) {
-            // If no results found, send a 404 status with a JSON response
-            return res.status(404).json({ message: 'No Results' });
+      // Define the query to find the employee by its ID
+      let employeeQuery = { _id: new ObjectId(employeeId) };
+
+      // Use findOne to find the employee in the database
+      employeesCollection.findOne(employeeQuery)
+        .then((result) => {
+          // Log the result to the console
+          // console.log('r', result);
+
+          // Check if the employee is not found
+          if (!result) {
+            // If employee is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find employee with ID ${employeeId}` });
           } else {
-            // If results found, send a 200 status with a JSON response containing the results
-            res.status(200).json(results);
+            // If the employee is found, send a 200 status with a JSON response containing the employee
+            res.status(200).json(result);
           }
         })
-        .catch(err => {
-          // Log any errors to the console and send a 500 status with a JSON response containing the error
-          console.error(err);
-          res.status(500).json({ error: err })
-        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
     });
+
 
     // GET route for editing a specific employee
     app.get('/employees/:id/edit', (req, res) => {
@@ -333,9 +368,9 @@ MongoClient.connect(CONNECTION_STRING)
 
       employeesCollection.findOneAndUpdate(employeeQuery, { $set: employeeData }, { upsert: true, returnOriginal: false })
         .then((result) => {
-          console.log("updateResult",);
+          console.log("updateResult", employeeData);
           // res.send({employeeData})
-          result = Object.assign({}, employeeQuery, { category: req.body.category, author: req.body.author, employee: req.body.employee });
+          result = Object.assign({}, employeeQuery, employeeData);
           if (!result) {
             return res.status(404).json({ message: `Cannot update employee with ID ${employeeId}` });
           } else {
@@ -380,8 +415,53 @@ MongoClient.connect(CONNECTION_STRING)
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
-    app.delete('/employees', (req, res) => {
+    app.delete('/employees/:id/delete', (req, res) => {
       console.log('DRR:', req.body)
+      const employeeId = req.params.id;
+      const employeeQuery = { _id: new ObjectId(employeeId) };
+      const employeeData = req.body;
+      console.log('Delete Employee Data:', employeeData);
+
+      employeesCollection.deleteOne(employeeQuery, employeeData)
+        .then(result => {
+          console.log('Delete Employee Data:', employeeData);
+          console.log('dr', { ...result })
+          if (result.deletedCount === 0) {
+            res.json({ message: 'No record of that employee was found.' });
+          } else {
+            console.log('Deleted', result, employeeData);
+            res.status(200).json(result)
+          }
+        })
+        .catch((e) => {
+          console.error(`Error deleting employee ${employeeId}`, e);
+          res.status(500).send('Server error');
+        });
+    });
+
+
+    app.delete('/api/employees/:id/delete', (req, res) => {
+      console.log('DRR:', req.body)
+      const employeeId = req.params.id;
+      const employeeQuery = { _id: new ObjectId(employeeId) };
+      const employeeData = req.body;
+      console.log('Delete Employee Data:', employeeData);
+
+      employeesCollection.deleteOne(employeeQuery, employeeData)
+        .then(result => {
+          console.log('Delete Employee Data:', employeeData);
+          console.log('dr', { ...result })
+          if (result.deletedCount === 0) {
+            res.json({ message: 'No record of that employee was found.' });
+          } else {
+            console.log('Deleted', result, employeeData);
+            res.status(200).json(result)
+          }
+        })
+        .catch((e) => {
+          console.error(`Error deleting employee ${employeeId}`, e);
+          res.status(500).send('Server error');
+        });
     });
     // ----------------------------------------------------------------------------
 

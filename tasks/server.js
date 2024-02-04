@@ -10,6 +10,7 @@ const password = require('./password');
 const PASSWORD = password.getPassword()
 const CONNECTION_STRING = `mongodb+srv://tasks:${PASSWORD}@tasks-cluster.fnjlht6.mongodb.net/?retryWrites=true&w=majority`;
 
+// Create Database Client Connection 
 MongoClient.connect(CONNECTION_STRING)
   .then(client => {
     console.log('Connected to MongoDB Server')
@@ -71,7 +72,6 @@ MongoClient.connect(CONNECTION_STRING)
       // Add the received task to the database collection
       tasksCollection.insertOne(req.body)
         .then(result => {
-          console.log('rb2', result)
           // Redirect the browser to the home page after successfully adding the task
           res.redirect('/');
         })
@@ -83,14 +83,16 @@ MongoClient.connect(CONNECTION_STRING)
 
     // API:---------------------
     app.post('/api', (req, res) => {
-      
+      // Log the request body
+      console.log('rb', req.body);
+
       // Add the received task to the database collection
       tasksCollection.insertOne(req.body)
         .then(result => {
           // Send back the inserted document as JSON
           res.json(req.body);
+          console.log('rb2', result, req.body)
           // Redirect the browser to the home page after successfully adding the task
-          // res.redirect('/');
         })
         .catch(err => {
           // Log any errors to the console
@@ -98,6 +100,7 @@ MongoClient.connect(CONNECTION_STRING)
         });
     });
     // ---------------------------
+
     // ----------------------------------------------------------------------------
 
     // Read -----------------------------------------------------------------------
@@ -189,11 +192,37 @@ MongoClient.connect(CONNECTION_STRING)
         })
         .catch((err) => {
           // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
-          console.log(err);
+          console.error(err);
           res.status(500).json({ error: 'Internal Server Error' });
         });
     });
     // ------------------------
+
+     // GET route for retrieving all tasks
+    app.get('/tasks', (req, res) => {
+      // Retrieve all tasks from the database collection
+      tasksCollection.find()
+        .toArray()
+        .then(results => {
+          // Log the results to the console
+          console.log(results);
+
+          // Check if there are no results
+          if (!results) {
+            // If no results found, send a 404 status with a JSON response
+            return res.status(404).json({ message: 'No Results' });
+          } else {
+            // If results found, send a 200 status with a JSON response containing the results
+            res.status(200).json(results);
+          }
+        })
+        .catch(err => {
+          // Log any errors to the console and send a 500 status with a JSON response containing the error
+          console.error(err);
+          res.status(500).json({ error: err })
+        })
+    });
+
 
     // Route to retrieve all tasks by ID
     app.get('/tasks/:id', (req, res) => {
@@ -220,36 +249,42 @@ MongoClient.connect(CONNECTION_STRING)
         })
         .catch((err) => {
           // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
-          console.log(err);
+          console.error(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+    
+    // Route to retrieve all tasks by ID
+    app.get('/api/tasks/:id', (req, res) => {
+      // Extract the task ID from the request parameters
+      let taskId = req.params.id;
+
+      // Define the query to find the task by its ID
+      let taskQuery = { _id: new ObjectId(taskId) };
+
+      // Use findOne to find the task in the database
+      tasksCollection.findOne(taskQuery)
+        .then((result) => {
+          // Log the result to the console
+          // console.log('r', result);
+
+          // Check if the task is not found
+          if (!result) {
+            // If task is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find task with ID ${taskId}` });
+          } else {
+            // If the task is found, send a 200 status with a JSON response containing the task
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.error(err);
           res.status(500).json({ error: 'Internal Server Error' });
         });
     });
 
-    // GET route for retrieving all tasks
-    app.get('/tasks', (req, res) => {
-      // Retrieve all tasks from the database collection
-      tasksCollection.find()
-        .toArray()
-        .then(results => {
-          // Log the results to the console
-          console.log(results);
-
-          // Check if there are no results
-          if (!results) {
-            // If no results found, send a 404 status with a JSON response
-            return res.status(404).json({ message: 'No Results' });
-          } else {
-            // If results found, send a 200 status with a JSON response containing the results
-            res.status(200).json(results);
-          }
-        })
-        .catch(err => {
-          // Log any errors to the console and send a 500 status with a JSON response containing the error
-          console.error(err);
-          res.status(500).json({ error: err })
-        })
-    });
-
+   
     // GET route for editing a specific task
     app.get('/tasks/:id/edit', (req, res) => {
       // Extract the task ID from the request parameters
@@ -287,7 +322,7 @@ MongoClient.connect(CONNECTION_STRING)
         })
         .catch((err) => {
           // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
-          console.log(err);
+          console.error(err);
           res.status(500).send('Internal Server Error');
         });
     });
@@ -315,7 +350,7 @@ MongoClient.connect(CONNECTION_STRING)
         })
         .catch((err) => {
           // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
-          console.log(err);
+          console.error(err);
           res.status(500).json({ error: 'Internal Server Error' });
         });
     });
@@ -333,9 +368,9 @@ MongoClient.connect(CONNECTION_STRING)
 
       tasksCollection.findOneAndUpdate(taskQuery, { $set: taskData }, { upsert: true, returnOriginal: false })
         .then((result) => {
-          console.log("updateResult",);
+          console.log("updateResult",taskData);
           // res.send({taskData})
-          result = Object.assign({}, taskQuery, { category: req.body.category, author: req.body.author, task: req.body.task });
+          result = Object.assign({}, taskQuery, taskData);
           if (!result) {
             return res.status(404).json({ message: `Cannot update task with ID ${taskId}` });
           } else {
@@ -380,8 +415,53 @@ MongoClient.connect(CONNECTION_STRING)
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
-    app.delete('/tasks', (req, res) => {
+    app.delete('/tasks/:id/delete', (req, res) => {
       console.log('DRR:', req.body)
+      const taskId = req.params.id;
+      const taskQuery = { _id: new ObjectId(taskId) };
+      const taskData = req.body;
+      console.log('Delete Task Data:', taskData);
+      
+      tasksCollection.deleteOne(taskQuery, taskData)
+      .then(result => {
+        console.log('Delete Task Data:', taskData);
+        console.log('dr',{...result})
+        if (result.deletedCount === 0) {
+          res.json({message: 'No record of that task was found.'});
+        } else {
+          console.log('Deleted', result, taskData);
+          res.status(200).json(result)
+        }
+      })
+      .catch((e) => {
+        console.error(`Error deleting task ${taskId}`, e);
+        res.status(500).send('Server error');
+      });
+    });
+    
+    
+    app.delete('/api/tasks/:id/delete', (req, res) => {
+      console.log('DRR:', req.body)
+      const taskId = req.params.id;
+      const taskQuery = { _id: new ObjectId(taskId) };
+      const taskData = req.body;
+      console.log('Delete Task Data:', taskData);
+      
+      tasksCollection.deleteOne(taskQuery, taskData)
+      .then(result => {
+        console.log('Delete Task Data:', taskData);
+        console.log('dr',{...result})
+        if (result.deletedCount === 0) {
+          res.json({message: 'No record of that task was found.'});
+        } else {
+          console.log('Deleted', result, taskData);
+          res.status(200).json(result)
+        }
+      })
+      .catch((e) => {
+        console.error(`Error deleting task ${taskId}`, e);
+        res.status(500).send('Server error');
+      });
     });
     // ----------------------------------------------------------------------------
 
