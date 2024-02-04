@@ -15,7 +15,7 @@
 
     <!-- Addresses -->
     <h1>Edit Contact</h1>
-    <form action="/contacts/<%= contact._id %>" method="PUT">
+    <form id="editContactForm" action="/contacts/<%= contact._id %>" method="PUT">
         <label for="name">Name:</label><br>
         <input type="text" id="name" name="name" value="<%= contact.name %>" required><br>
 
@@ -39,8 +39,8 @@
         <label for="address">Address:</label><br>
         <textarea id="address" name="address" rows="4" cols="50"><%= contact.address %></textarea><br>
         
-        <button class="btn btn-success" type="submit">Save Changes</button>
-        <button class="btn btn-success" type="submit">Cancel</button>
+        <button data-id="<%= contact._id %>" id="save-btn" class="btn btn-succes" type="submit">Save Changes</button>
+		<button data-id="<%= contact._id %>" id="cancel-btn" class="btn btn-succes" type="submit">Cancel</button>
     </form>
 
     <script src="/main.js"></script>

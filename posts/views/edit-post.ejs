@@ -20,9 +20,9 @@
 
 	<!-- Posts -->
 	<h1>Edit Post</h1>
-	<form action="/posts/<%= post._id %>" method="POST">
+	<form id="editPostForm" action="/posts/<%= post._id %>" method="PUT">
 		<label for="title">Title:</label><br>
-		<input type="text" id="title" name="title" value="<%= post.title %>"" required><br>
+		<input type="text" id="title" name="title" value="<%= post.title %>" required><br>
 
 
 		<label for="author">Author:</label><br>
@@ -37,8 +37,8 @@
 		<label for="content">Content:</label><br>
 		<textarea id="content" name="content" rows="4" cols="50" required><%= post.content %></textarea><br>
 
-		<button class="btn btn-success" type="submit">Re-Publish</button>
-    <button class="btn btn-success" type="submit">Cancel</button>
+		<button data-id="<%= post._id %>" id="save-btn" class="btn btn-succes" type="submit">Re-Publish</button>
+		<button data-id="<%= post._id %>" id="cancel-btn" class="btn btn-succes" type="submit">Cancel</button>
 	</form>
 
 

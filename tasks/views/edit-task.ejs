@@ -18,7 +18,7 @@
 
 		<!-- Tasks Form -->
 		<h2>Add New Task</h2>
-		<form action="/tasks/<%= task._id %>" method="PUT">
+		<form id="editTaskForm" action="/tasks/<%= task._id %>" method="PUT">
 			<label for="dueDate">Due Date:</label><br>
 			<input type="date" id="dueDate" name="dueDate" value="<%= task.dueDate %>"><br>
 		
@@ -30,8 +30,8 @@
 		
 			<!-- Add more fields as needed -->
 		
-			<button class="btn btn-success" type="submit">Save Changes</button>
-			<button class="btn btn-success" type="submit">Cancel</button>
+			<button data-id="<%= task._id %>" id="save-btn" class="btn btn-succes" type="submit">Save Changes</button>
+			<button data-id="<%= task._id %>" id="cancel-btn" class="btn btn-succes" type="submit">Cancel</button>
 		</form>
 
 		<script src="/main.js"></script>

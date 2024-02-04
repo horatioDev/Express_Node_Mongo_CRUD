@@ -16,7 +16,7 @@
 <!-- Update Section -->
 <section id="updateMemberForm">
     <h2 id="header">Update a Team Member's Information</h2>
-    <form action="/employees/<%= employee._id %>" method="PUT">
+    <form id="editEmployeeForm" action="/employees/<%= employee._id %>" method="PUT">
         <label for="name">Name:</label><br>
         <input type="text" id="name" name="name" value="<%= employee.name %>" required><br>
 
@@ -68,8 +68,8 @@
 
         <!-- Add more fields as needed -->
 
-        <button class="btn btn-success" type="submit">Save Changes</button>
-        <button class="btn btn-success" type="submit">Cancel</button>
+        <button data-id="<%= employee._id %>" id="save-btn" class="btn btn-succes" type="submit">Save Changes</button>
+		<button data-id="<%= employee._id %>" id="cancel-btn" class="btn btn-succes" type="submit">Cancel</button>
     </form>
 </section>
 
