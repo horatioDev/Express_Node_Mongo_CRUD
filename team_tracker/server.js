@@ -10,17 +10,16 @@ const password = require('./password.js');
 const PASSWORD = password.getPassword();
 const CONNECTION_STRING = `mongodb+srv://employees:${PASSWORD}@employees-cluster.lex1ez3.mongodb.net/?retryWrites=true&w=majority`;
 
-// Create Client Connection
 MongoClient.connect(CONNECTION_STRING)
   .then(client => {
-    console.log('Connected to MongoDB Server:')
+    console.log('Connected to MongoDB Server')
     const db = client.db("employeesDB");
     const employeesCollection = db.collection('employees');
 
     // we need to set view engine to ejs. This tells Express we’re using EJS as the template engine
     app.set('view engine', 'ejs');
 
-    // Body Parser ----------------------------------------------------------------
+    // Body Parser -----------------------------------------------------------
     /*
     Body-parser: is a middleware that helps express handle reading data from the <form> element.
     npm install body-parser --save
@@ -42,7 +41,7 @@ MongoClient.connect(CONNECTION_STRING)
     app.use(bodyParser.json());
     //  Serve Static Files ----------------------------------------------------
     app.use(express.static('public'));
-    
+
     // ----------------------------------------------------------------------------
 
     // Create ---------------------------------------------------------------------
@@ -64,18 +63,41 @@ MongoClient.connect(CONNECTION_STRING)
     See: Body-parser
     */
 
+    // POST route for adding a new employee
     app.post('/employees', (req, res) => {
-      // console.log('This is a POST request');
-      // console.log(req.body)
+      // Log the request body
+      console.log('rb', req.body);
 
-      // Add items to collection
+      // Add the received employee to the database collection
       employeesCollection.insertOne(req.body)
         .then(result => {
-          // redirect browser
+          console.log('rb2', result)
+          // Redirect the browser to the home page after successfully adding the employee
           res.redirect('/');
         })
-        .catch(err => console.error(err))
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+        });
     });
+
+    // API:---------------------
+    app.post('/api', (req, res) => {
+      
+      // Add the received employee to the database collection
+      employeesCollection.insertOne(req.body)
+        .then(result => {
+          // Send back the inserted document as JSON
+          res.json(req.body);
+          // Redirect the browser to the home page after successfully adding the employee
+          // res.redirect('/');
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+        });
+    });
+    // ---------------------------
     // ----------------------------------------------------------------------------
 
     // Read -----------------------------------------------------------------------
@@ -92,73 +114,283 @@ MongoClient.connect(CONNECTION_STRING)
     app.get('/', (req, res) => {handle get req})
     */
 
+    // Home page route
     app.get('/', (req, res) => {
-      // Let'serve index.html
-      // __dirname is the current directory you're in. 
-      // console.log(__dirname)
-      // res.sendFile(__dirname + '/index.html')
 
-      // Get employees from database
-      // const allEmployees = db.collection('employees').find();
-      // Makes no sense logged
-      // console.log(allEmployees);
+      // Retrieve employees from the database
+      employeesCollection.find()
+        .toArray() // Convert MongoDB cursor to array
+        .then(results => {
+          // Render the home page with the retrieved employees
+          res.render('index', { employees: results });
 
-      // Convert data to array
-      db.collection('employees').find()
+          // Alternative approach: Determine the response format based on the request accept header
+          // if (req.accepts('html')) {
+          //   res.status(200).render('index.ejs', { employees: results });
+          // } else {
+          //   res.status(200).json({ employees: results });
+          // }
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+          // Send a 500 response for any internal server errors
+          res.status(500).send('Internal Server Error');
+        });
+    });
+
+    // API: Route to retrieve all employees as JSON
+    app.get('/api/employees', (req, res) => {
+      // Retrieve all employees from the database
+      employeesCollection.find()
+        .toArray() // Convert MongoDB cursor to array
+        .then(results => {
+          // Check if there are any employees found
+          (!results) ?
+            // Send a 404 response if no employees are found
+            res.status(404).json({
+              message: 'No entries found.',
+              results // Include an empty results array in the response
+            })
+            :
+            // Send a successful response with the employees as JSON
+            res.status(200).json(results);
+
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+          // Send a 500 response for any internal server errors
+          res.status(500).send('Internal Server Error');
+        });
+    });
+    // ------------------------
+
+    // API: Route to retrieve all employees by ID as JSON
+    app.get('/api/employees/:id', (req, res) => {
+      // Extract the employee ID from the request parameters
+      let employeeId = req.params.id;
+
+      // Define the query to find the employee by its ID
+      let employeeQuery = { _id: new ObjectId(employeeId) };
+
+      // Use findOne to find the employee in the database
+      employeesCollection.findOne(employeeQuery)
+        .then((result) => {
+
+          // Check if the employee is not found
+          if (!result) {
+            // If employee is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find employee with ID ${employeeId}` });
+          } else {
+            // If the employee is found, send a 200 status with a JSON response containing the employee
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+    // ------------------------
+
+    // Route to retrieve all employees by ID
+    app.get('/employees/:id', (req, res) => {
+      // Extract the employee ID from the request parameters
+      let employeeId = req.params.id;
+
+      // Define the query to find the employee by its ID
+      let employeeQuery = { _id: new ObjectId(employeeId) };
+
+      // Use findOne to find the employee in the database
+      employeesCollection.findOne(employeeQuery)
+        .then((result) => {
+          // Log the result to the console
+          // console.log('r', result);
+
+          // Check if the employee is not found
+          if (!result) {
+            // If employee is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find employee with ID ${employeeId}` });
+          } else {
+            // If the employee is found, send a 200 status with a JSON response containing the employee
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+
+    // GET route for retrieving all employees
+    app.get('/employees', (req, res) => {
+      // Retrieve all employees from the database collection
+      employeesCollection.find()
         .toArray()
         .then(results => {
-          // Render ejs
-          res.render('index.ejs', { employees: results })
+          // Log the results to the console
+          console.log(results);
+
+          // Check if there are no results
+          if (!results) {
+            // If no results found, send a 404 status with a JSON response
+            return res.status(404).json({ message: 'No Results' });
+          } else {
+            // If results found, send a 200 status with a JSON response containing the results
+            res.status(200).json(results);
+          }
         })
-        .catch(err => console.error(err));
-
+        .catch(err => {
+          // Log any errors to the console and send a 500 status with a JSON response containing the error
+          console.error(err);
+          res.status(500).json({ error: err })
+        })
     });
 
-    // Get all employees
-    app.get('/employees', (req, res) => {
-      res.send('Employees')
-    })
-
-    // Get update form pre-filled
-    app.get('/employees/:id/edit', (req,res) => {
+    // GET route for editing a specific employee
+    app.get('/employees/:id/edit', (req, res) => {
+      // Extract the employee ID from the request parameters
       let employeeId = req.params.id;
-      let employeeQuery = { _id: new ObjectId(employeeId)};
+
+      // Define the query to find the employee by its ID
+      let employeeQuery = { _id: new ObjectId(employeeId) };
+
+      // Log the employee ID to the console
       console.log(employeeId);
-      // res.send(`Editing employee: ${employeeId}`);
-      db.collection("employees").findOne(employeeQuery)
-       .then((result) =>{
-         //console.log(result);
-         if(!result){
-           res.redirect("/")
-         } else {
-           res.render("edit-employee.ejs", {pageTitle:"Edit Employee", employee: result})
-         }
-       }).catch((err)=>{
-         console.log(err);
-         res.status(500).send('Internal Server Error')
-       })
+
+      // Use findOne to find the employee in the database
+      employeesCollection.findOne(employeeQuery)
+        .then((result) => {
+          // Log the result to the console
+          console.log('r', result);
+
+          // Check if the employee is not found
+          if (!result) {
+            // If employee is not found, send a 404 status with a JSON response and redirect to the home page
+            return res.status(404).json({ message: `Cannot find employee with ID ${employeeId}` }).redirect("/");
+          } else {
+            // If the employee is found
+
+            // Check if the request's accept header indicates JSON format
+            const acceptHeader = req.headers['accept'];
+            if (acceptHeader && acceptHeader.includes('application/json')) {
+              // If JSON format is requested, send a 200 status with a JSON response containing the employee
+              return res.status(200).json(result);
+            } else {
+              // If HTML format is requested, render the edit-employee.ejs template with the employee data
+              res.render("edit-employee.ejs", { employee: result });
+            }
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).send('Internal Server Error');
+        });
     });
+
+    // API: GET route for editing a specific employee in API format
+    app.get('/api/employees/:id/edit', (req, res) => {
+      // Extract the employee ID from the request parameters
+      let employeeId = req.params.id;
+
+      // Define the query to find the employee by its ID
+      let employeeQuery = { _id: new ObjectId(employeeId) };
+
+      // Use findOne to find the employee in the database
+      employeesCollection.findOne(employeeQuery)
+        .then((result) => {
+
+          // Check if the employee is not found
+          if (!result) {
+            // If employee is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find employee with ID ${employeeId}` });
+          } else {
+            // If the employee is found, send a 200 status with a JSON response containing the employee
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+    // ------------------------
+
     // ----------------------------------------------------------------------------
 
     // Update -----------------------------------------------------------------
-    app.put('/employees/:id', (req,res) => {
-      console.log('UDR:', req.body)
+    app.put('/employees/:id', (req, res) => {
+      const employeeId = req.params.id;
+      const employeeQuery = { _id: new ObjectId(employeeId) };
+      const employeeData = req.body;
+      console.log('Updated Employee Data:', employeeData);
+
+
+      employeesCollection.findOneAndUpdate(employeeQuery, { $set: employeeData }, { upsert: true, returnOriginal: false })
+        .then((result) => {
+          console.log("updateResult",);
+          // res.send({employeeData})
+          result = Object.assign({}, employeeQuery, { category: req.body.category, author: req.body.author, employee: req.body.employee });
+          if (!result) {
+            return res.status(404).json({ message: `Cannot update employee with ID ${employeeId}` });
+          } else {
+            return res.status(200).json(result);
+          }
+        })
+        .catch((e) => {
+          console.error(`Error updating employee ${employeeId}`, e);
+          res.status(500).send('Server error');
+        });
+
     });
+
+    // API: PUT route handler that is called when the /api/employees/:id endpoint is hit 
+    app.put('/api/employees/:id', (req, res) => {
+      const employeeId = req.params.id;
+      const employeeQuery = { _id: new ObjectId(employeeId) };
+      const employeeData = req.body;
+      console.log('Updated Employee Data:', employeeData);
+
+
+      employeesCollection.findOneAndUpdate(employeeQuery, { $set: employeeData }, { upsert: true, returnOriginal: false })
+        .then((result) => {
+          console.log("updateResult",);
+          // res.send({employeeData})
+          result = Object.assign({}, employeeQuery, employeeData);
+          if (!result) {
+            return res.status(404).json({ message: `Cannot update employee with ID ${employeeId}` });
+          } else {
+            return res.status(200).json(result);
+          }
+        })
+        .catch((e) => {
+          console.error(`Error updating employee ${employeeId}`, e);
+          res.status(500).send('Server error');
+        });
+
+    });
+    // ------------------------
+
+
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
-    app.delete('/employees', (req,res) => {
+    app.delete('/employees', (req, res) => {
       console.log('DRR:', req.body)
     });
     // ----------------------------------------------------------------------------
-    // ----------------------------------------------------------------------------
-  })
-  .catch(error => { console.error(error) })
 
-// Listen for server on port localhost:3000
-app.listen(PORT, function () {
-  console.log(`Listening on localhost:${PORT}`)
-});
+    // Listen for server on port localhost:3000
+    app.listen(PORT, function () {
+      console.log(`Listening on localhost:${PORT}`)
+    });
+  })
+  .catch(error => console.error(error));
 
 // Run server
 // cd working_dir && node server.js

@@ -1,6 +1,7 @@
 // Create server for browser use w/ express
 const express = require('express');
 const app = express();
+const path = require("path");
 const bodyParser = require('body-parser')
 const PORT = process.env.PORT || 3000;
 const ObjectId = require('mongodb').ObjectId;
@@ -15,11 +16,11 @@ MongoClient.connect(CONNECTION_STRING)
   .then(client => {
     console.log('Connected to MongoDB Server')
     const db = client.db("quotesDB");
-    const quotesCollection = db.collection('quotes')
+    const quotesCollection = db.collection('quotes');
 
     // we need to set view engine to ejs. This tells Express we’re using EJS as the template engine
     app.set('view engine', 'ejs');
-  
+
     // Body Parser -----------------------------------------------------------
     /*
     Body-parser: is a middleware that helps express handle reading data from the <form> element.
@@ -42,7 +43,7 @@ MongoClient.connect(CONNECTION_STRING)
     app.use(bodyParser.json());
     //  Serve Static Files ----------------------------------------------------
     app.use(express.static('public'));
-    
+
     // ----------------------------------------------------------------------------
 
     // Create ---------------------------------------------------------------------
@@ -64,18 +65,44 @@ MongoClient.connect(CONNECTION_STRING)
     See: Body-parser
     */
 
+    // POST route for adding a new quote
     app.post('/quotes', (req, res) => {
-      // console.log('This is a POST request');
-      // console.log(req.body)
+      // Log the request body
+      console.log('rb', req.body);
 
-      // Add items to collection
+      // Add the received quote to the database collection
       quotesCollection.insertOne(req.body)
         .then(result => {
-          // redirect browser
+          console.log('rb2', result)
+          // Redirect the browser to the home page after successfully adding the quote
           res.redirect('/');
         })
-        .catch(err => console.error(err))
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+        });
     });
+
+    // API:---------------------
+    app.post('/api', (req, res) => {
+      // Log the request body
+      console.log('rb', req.body);
+
+      // Add the received quote to the database collection
+      quotesCollection.insertOne(req.body)
+        .then(result => {
+          // Send back the inserted document as JSON
+          res.json(req.body);
+          console.log('rb2', result, req.body)
+          // Redirect the browser to the home page after successfully adding the quote
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+        });
+    });
+    // ---------------------------
+
     // ----------------------------------------------------------------------------
 
     // Read -----------------------------------------------------------------------
@@ -92,105 +119,284 @@ MongoClient.connect(CONNECTION_STRING)
     app.get('/', (req, res) => {handle get req})
     */
 
-    // Home page
+    // Home page route
     app.get('/', (req, res) => {
-      // Let'serve index.html
-      // __dirname is the current directory you're in. 
-      // console.log(__dirname)
-      // res.sendFile(__dirname + '/index.html')
 
-      // Get quotes from database
-      // const allQuotes = db.collection('quotes').find();
-      // Makes no sense logged
-      // console.log(allQuotes);
+      // Retrieve quotes from the database
+      quotesCollection.find()
+        .toArray() // Convert MongoDB cursor to array
+        .then(results => {
+          // Render the home page with the retrieved quotes
+          res.render('index', { quotes: results });
 
-      // Convert data to array
-      db.collection('quotes').find()
+          // Alternative approach: Determine the response format based on the request accept header
+          // if (req.accepts('html')) {
+          //   res.status(200).render('index.ejs', { quotes: results });
+          // } else {
+          //   res.status(200).json({ quotes: results });
+          // }
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+          // Send a 500 response for any internal server errors
+          res.status(500).send('Internal Server Error');
+        });
+    });
+
+    // API: Route to retrieve all quotes as JSON
+    app.get('/api/quotes', (req, res) => {
+      // Retrieve all quotes from the database
+      quotesCollection.find()
+        .toArray() // Convert MongoDB cursor to array
+        .then(results => {
+          // Check if there are any quotes found
+          (!results) ?
+            // Send a 404 response if no quotes are found
+            res.status(404).json({
+              message: 'No entries found.',
+              results // Include an empty results array in the response
+            })
+            :
+            // Send a successful response with the quotes as JSON
+            res.status(200).json(results);
+
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+          // Send a 500 response for any internal server errors
+          res.status(500).send('Internal Server Error');
+        });
+    });
+    // ------------------------
+
+    // API: Route to retrieve all quotes by ID as JSON
+    app.get('/api/quotes/:id', (req, res) => {
+      // Extract the quote ID from the request parameters
+      let quoteId = req.params.id;
+
+      // Define the query to find the quote by its ID
+      let quoteQuery = { _id: new ObjectId(quoteId) };
+
+      // Use findOne to find the quote in the database
+      quotesCollection.findOne(quoteQuery)
+        .then((result) => {
+
+          // Check if the quote is not found
+          if (!result) {
+            // If quote is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find quote with ID ${quoteId}` });
+          } else {
+            // If the quote is found, send a 200 status with a JSON response containing the quote
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+    // ------------------------
+
+    // Route to retrieve all quotes by ID
+    app.get('/quotes/:id', (req, res) => {
+      // Extract the quote ID from the request parameters
+      let quoteId = req.params.id;
+
+      // Define the query to find the quote by its ID
+      let quoteQuery = { _id: new ObjectId(quoteId) };
+
+      // Use findOne to find the quote in the database
+      quotesCollection.findOne(quoteQuery)
+        .then((result) => {
+          // Log the result to the console
+          // console.log('r', result);
+
+          // Check if the quote is not found
+          if (!result) {
+            // If quote is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find quote with ID ${quoteId}` });
+          } else {
+            // If the quote is found, send a 200 status with a JSON response containing the quote
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+
+    // GET route for retrieving all quotes
+    app.get('/quotes', (req, res) => {
+      // Retrieve all quotes from the database collection
+      quotesCollection.find()
         .toArray()
         .then(results => {
+          // Log the results to the console
           console.log(results);
-          // Render ejs
-          res.render('index.ejs', { quotes: results })
+
+          // Check if there are no results
+          if (!results) {
+            // If no results found, send a 404 status with a JSON response
+            return res.status(404).json({ message: 'No Results' });
+          } else {
+            // If results found, send a 200 status with a JSON response containing the results
+            res.status(200).json(results);
+          }
         })
-        .catch(err => console.error(err));
-
+        .catch(err => {
+          // Log any errors to the console and send a 500 status with a JSON response containing the error
+          console.error(err);
+          res.status(500).json({ error: err })
+        })
     });
 
-    // Get all quotes
-    app.get('/quotes', (req, res) => {
-      res.send('Quotes')
-    })
-
-    // Get update form pre-filled
-    app.get('/quotes/:id/edit', (req,res) => {
+    // GET route for editing a specific quote
+    app.get('/quotes/:id/edit', (req, res) => {
+      // Extract the quote ID from the request parameters
       let quoteId = req.params.id;
-      let quoteQuery = { _id: new ObjectId(quoteId)};
+
+      // Define the query to find the quote by its ID
+      let quoteQuery = { _id: new ObjectId(quoteId) };
+
+      // Log the quote ID to the console
       console.log(quoteId);
-      // res.send(`Editing Quote: ${quoteId}`);
-      db.collection("quotes").findOne(quoteQuery)
-       .then((result) =>{
-         //console.log(result);
-         if(!result){
-           res.redirect("/")
-         } else {
-           res.render("edit-quote.ejs", {pageTitle:"Edit Quote", quote: result})
-         }
-       }).catch((err)=>{
-         console.log(err);
-         res.status(500).send('Internal Server Error')
-       })
+
+      // Use findOne to find the quote in the database
+      quotesCollection.findOne(quoteQuery)
+        .then((result) => {
+          // Log the result to the console
+          console.log('r', result);
+
+          // Check if the quote is not found
+          if (!result) {
+            // If quote is not found, send a 404 status with a JSON response and redirect to the home page
+            return res.status(404).json({ message: `Cannot find quote with ID ${quoteId}` }).redirect("/");
+          } else {
+            // If the quote is found
+
+            // Check if the request's accept header indicates JSON format
+            const acceptHeader = req.headers['accept'];
+            if (acceptHeader && acceptHeader.includes('application/json')) {
+              // If JSON format is requested, send a 200 status with a JSON response containing the quote
+              return res.status(200).json(result);
+            } else {
+              // If HTML format is requested, render the edit-quote.ejs template with the quote data
+              res.render("edit-quote.ejs", { quote: result });
+            }
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).send('Internal Server Error');
+        });
     });
 
-  // Handle Update logic
-  //  app.post('/quotes/:id/update', (req, res) => {
-  //    let updatedQuote = req.body;
-  //    delete updatedQuote.submit;
-  //    console.log(updatedQuote);
-  //    const id = req.params.id;
-  //    db.collection("quotes").updateOne({ _id: new ObjectID(id)}, {$set: updatedQuote}, function(err, result) {
-  //    db.collection("quotes").findOneAndUpdate({ _id : new ObjectID(id)}, 
-  //                           {$set: updatedQuote}, {useFindAndModify: false} )
-  //    .then(()=>{
-  //      res.redirect('/');
-  //    })
-  //    .catch((err)=> {
-  //      console.log(err);
-  //      res.send("Error updating quote");
-  //    });
-  //  });
-  //     res.render('edit-quote.ejs', {  _id: quoteId});
-  //     // res.sendFile(__dirname + '/index.html')
-  //     // db.collection('quotes').find({_id: quoteId}, (err, quote) => {
-  //     //   if (err) {
-  //     //     console.error("Error fetching quote from database:", err);
-  //     //     res.status(500).send("Error fetching quote from database");
-  //     //     return;
-  //     //   }
-  //     //   console.log('result', result);
-  //     //   res.render('edit-quote.ejs', { quote });
-  //     // });
-  //   });
+    // API: GET route for editing a specific quote in API format
+    app.get('/api/quotes/:id/edit', (req, res) => {
+      // Extract the quote ID from the request parameters
+      let quoteId = req.params.id;
+
+      // Define the query to find the quote by its ID
+      let quoteQuery = { _id: new ObjectId(quoteId) };
+
+      // Use findOne to find the quote in the database
+      quotesCollection.findOne(quoteQuery)
+        .then((result) => {
+
+          // Check if the quote is not found
+          if (!result) {
+            // If quote is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find quote with ID ${quoteId}` });
+          } else {
+            // If the quote is found, send a 200 status with a JSON response containing the quote
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+    // ------------------------
+
     // ----------------------------------------------------------------------------
 
     // Update -----------------------------------------------------------------
-    app.put('/quotes/:id', (req,res) => {
-      console.log('UDR:', req.body)
+    app.put('/quotes/:id', (req, res) => {
+      const quoteId = req.params.id;
+      const quoteQuery = { _id: new ObjectId(quoteId) };
+      const quoteData = req.body;
+      console.log('Updated Quote Data:', quoteData);
+
+
+      quotesCollection.findOneAndUpdate(quoteQuery, { $set: quoteData }, { upsert: true, returnOriginal: false })
+        .then((result) => {
+          console.log("updateResult",);
+          // res.send({quoteData})
+          result = Object.assign({}, quoteQuery, quoteData);
+          if (!result) {
+            return res.status(404).json({ message: `Cannot update quote with ID ${quoteId}` });
+          } else {
+            return res.status(200).json(result);
+          }
+        })
+        .catch((e) => {
+          console.error(`Error updating quote ${quoteId}`, e);
+          res.status(500).send('Server error');
+        });
+
     });
+
+    // API: PUT route handler that is called when the /api/quotes/:id endpoint is hit 
+    app.put('/api/quotes/:id', (req, res) => {
+      const quoteId = req.params.id;
+      const quoteQuery = { _id: new ObjectId(quoteId) };
+      const quoteData = req.body;
+      console.log('Updated Quote Data:', quoteData);
+
+
+      quotesCollection.findOneAndUpdate(quoteQuery, { $set: quoteData }, { upsert: true, returnOriginal: false })
+        .then((result) => {
+          console.log("updateResult",);
+          // res.send({quoteData})
+          result = Object.assign({}, quoteQuery, { category: req.body.category, author: req.body.author, quote: req.body.quote });
+          if (!result) {
+            return res.status(404).json({ message: `Cannot update quote with ID ${quoteId}` });
+          } else {
+            return res.status(200).json(result);
+          }
+        })
+        .catch((e) => {
+          console.error(`Error updating quote ${quoteId}`, e);
+          res.status(500).send('Server error');
+        });
+
+    });
+    // ------------------------
+
+
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
-    app.delete('/quotes', (req,res) => {
+    app.delete('/quotes', (req, res) => {
       console.log('DRR:', req.body)
     });
     // ----------------------------------------------------------------------------
 
+    // Listen for server on port localhost:3000
+    app.listen(PORT, function () {
+      console.log(`Listening on localhost:${PORT}`)
+    });
   })
   .catch(error => console.error(error));
 
-// Listen for server on port localhost:3000
-app.listen(PORT, function () {
-  console.log(`Listening on localhost:${PORT}`)
-});
 
 // Run server
 // cd working_dir && node server.js

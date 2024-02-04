@@ -10,7 +10,6 @@ const password = require('./password.js');
 const PASSWORD = password.getPassword();
 const CONNECTION_STRING = `mongodb+srv://contacts:${PASSWORD}@contacts-cluster.xsvvs0g.mongodb.net/?retryWrites=true&w=majority`;
 
-// Create Database Client Connection 
 MongoClient.connect(CONNECTION_STRING)
   .then(client => {
     console.log('Connected to MongoDB Server')
@@ -20,7 +19,7 @@ MongoClient.connect(CONNECTION_STRING)
     // we need to set view engine to ejs. This tells Express we’re using EJS as the template engine
     app.set('view engine', 'ejs');
 
-    // Body Parser ----------------------------------------------------------------
+    // Body Parser -----------------------------------------------------------
     /*
     Body-parser: is a middleware that helps express handle reading data from the <form> element.
     npm install body-parser --save
@@ -42,7 +41,7 @@ MongoClient.connect(CONNECTION_STRING)
     app.use(bodyParser.json());
     //  Serve Static Files ----------------------------------------------------
     app.use(express.static('public'));
-    
+
     // ----------------------------------------------------------------------------
 
     // Create ---------------------------------------------------------------------
@@ -64,18 +63,41 @@ MongoClient.connect(CONNECTION_STRING)
     See: Body-parser
     */
 
+    // POST route for adding a new contact
     app.post('/contacts', (req, res) => {
-      // console.log('This is a POST request');
-      // console.log(req.body)
+      // Log the request body
+      console.log('rb', req.body);
 
-      // Add items to collection
+      // Add the received contact to the database collection
       contactsCollection.insertOne(req.body)
         .then(result => {
-          // redirect browser
+          console.log('rb2', result)
+          // Redirect the browser to the home page after successfully adding the contact
           res.redirect('/');
         })
-        .catch(err => console.error(err))
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+        });
     });
+
+    // API:---------------------
+    app.post('/api', (req, res) => {
+      
+      // Add the received contact to the database collection
+      contactsCollection.insertOne(req.body)
+        .then(result => {
+          // Send back the inserted document as JSON
+          res.json(req.body);
+          // Redirect the browser to the home page after successfully adding the contact
+          // res.redirect('/');
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+        });
+    });
+    // ---------------------------
     // ----------------------------------------------------------------------------
 
     // Read -----------------------------------------------------------------------
@@ -92,75 +114,284 @@ MongoClient.connect(CONNECTION_STRING)
     app.get('/', (req, res) => {handle get req})
     */
 
-    // Home Page
+    // Home page route
     app.get('/', (req, res) => {
-      // Let'serve index.html
-      // __dirname is the current directory you're in. 
-      // console.log(__dirname)
-      // res.sendFile(__dirname + '/index.html')
 
-      // Get contacts from database
-      // const allContacts = db.collection('contacts').find();
-      // Makes no sense logged
-      // console.log(allContacts);
+      // Retrieve contacts from the database
+      contactsCollection.find()
+        .toArray() // Convert MongoDB cursor to array
+        .then(results => {
+          // Render the home page with the retrieved contacts
+          res.render('index', { contacts: results });
 
-      // Convert data to array
-      db.collection('contacts').find()
+          // Alternative approach: Determine the response format based on the request accept header
+          // if (req.accepts('html')) {
+          //   res.status(200).render('index.ejs', { contacts: results });
+          // } else {
+          //   res.status(200).json({ contacts: results });
+          // }
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+          // Send a 500 response for any internal server errors
+          res.status(500).send('Internal Server Error');
+        });
+    });
+
+    // API: Route to retrieve all contacts as JSON
+    app.get('/api/contacts', (req, res) => {
+      // Retrieve all contacts from the database
+      contactsCollection.find()
+        .toArray() // Convert MongoDB cursor to array
+        .then(results => {
+          // Check if there are any contacts found
+          (!results) ?
+            // Send a 404 response if no contacts are found
+            res.status(404).json({
+              message: 'No entries found.',
+              results // Include an empty results array in the response
+            })
+            :
+            // Send a successful response with the contacts as JSON
+            res.status(200).json(results);
+
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+          // Send a 500 response for any internal server errors
+          res.status(500).send('Internal Server Error');
+        });
+    });
+    // ------------------------
+
+    // API: Route to retrieve all contacts by ID as JSON
+    app.get('/api/contacts/:id', (req, res) => {
+      // Extract the contact ID from the request parameters
+      let contactId = req.params.id;
+
+      // Define the query to find the contact by its ID
+      let contactQuery = { _id: new ObjectId(contactId) };
+
+      // Use findOne to find the contact in the database
+      contactsCollection.findOne(contactQuery)
+        .then((result) => {
+
+          // Check if the contact is not found
+          if (!result) {
+            // If contact is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find contact with ID ${contactId}` });
+          } else {
+            // If the contact is found, send a 200 status with a JSON response containing the contact
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+    // ------------------------
+
+    // Route to retrieve all contacts by ID
+    app.get('/contacts/:id', (req, res) => {
+      // Extract the contact ID from the request parameters
+      let contactId = req.params.id;
+
+      // Define the query to find the contact by its ID
+      let contactQuery = { _id: new ObjectId(contactId) };
+
+      // Use findOne to find the contact in the database
+      contactsCollection.findOne(contactQuery)
+        .then((result) => {
+          // Log the result to the console
+          // console.log('r', result);
+
+          // Check if the contact is not found
+          if (!result) {
+            // If contact is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find contact with ID ${contactId}` });
+          } else {
+            // If the contact is found, send a 200 status with a JSON response containing the contact
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+
+    // GET route for retrieving all contacts
+    app.get('/contacts', (req, res) => {
+      // Retrieve all contacts from the database collection
+      contactsCollection.find()
         .toArray()
         .then(results => {
-          // Render ejs
-          res.render('index.ejs', { contacts: results });
+          // Log the results to the console
+          console.log(results);
+
+          // Check if there are no results
+          if (!results) {
+            // If no results found, send a 404 status with a JSON response
+            return res.status(404).json({ message: 'No Results' });
+          } else {
+            // If results found, send a 200 status with a JSON response containing the results
+            res.status(200).json(results);
+          }
         })
-        .catch(err => console.error(err));
-
+        .catch(err => {
+          // Log any errors to the console and send a 500 status with a JSON response containing the error
+          console.error(err);
+          res.status(500).json({ error: err })
+        })
     });
 
-
-    // Get all contacts
-    app.get('/contacts', (req, res) => {
-      res.send('contacts')
-    })
-
-    // Get update form pre-filled
-    app.get('/contacts/:id/edit', (req,res) => {
+    // GET route for editing a specific contact
+    app.get('/contacts/:id/edit', (req, res) => {
+      // Extract the contact ID from the request parameters
       let contactId = req.params.id;
-      let contactQuery = { _id: new ObjectId(contactId)};
+
+      // Define the query to find the contact by its ID
+      let contactQuery = { _id: new ObjectId(contactId) };
+
+      // Log the contact ID to the console
       console.log(contactId);
-      // res.send(`Editing contact: ${contactId}`);
-      db.collection("contacts").findOne(contactQuery)
-       .then((result) =>{
-         //console.log(result);
-         if(!result){
-           res.redirect("/")
-         } else {
-           res.render("edit-contact.ejs", {pageTitle:"Edit contact", contact: result})
-         }
-       }).catch((err)=>{
-         console.log(err);
-         res.status(500).send('Internal Server Error')
-       })
+
+      // Use findOne to find the contact in the database
+      contactsCollection.findOne(contactQuery)
+        .then((result) => {
+          // Log the result to the console
+          console.log('r', result);
+
+          // Check if the contact is not found
+          if (!result) {
+            // If contact is not found, send a 404 status with a JSON response and redirect to the home page
+            return res.status(404).json({ message: `Cannot find contact with ID ${contactId}` }).redirect("/");
+          } else {
+            // If the contact is found
+
+            // Check if the request's accept header indicates JSON format
+            const acceptHeader = req.headers['accept'];
+            if (acceptHeader && acceptHeader.includes('application/json')) {
+              // If JSON format is requested, send a 200 status with a JSON response containing the contact
+              return res.status(200).json(result);
+            } else {
+              // If HTML format is requested, render the edit-contact.ejs template with the contact data
+              res.render("edit-contact.ejs", { contact: result });
+            }
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).send('Internal Server Error');
+        });
     });
+
+    // API: GET route for editing a specific contact in API format
+    app.get('/api/contacts/:id/edit', (req, res) => {
+      // Extract the contact ID from the request parameters
+      let contactId = req.params.id;
+
+      // Define the query to find the contact by its ID
+      let contactQuery = { _id: new ObjectId(contactId) };
+
+      // Use findOne to find the contact in the database
+      contactsCollection.findOne(contactQuery)
+        .then((result) => {
+
+          // Check if the contact is not found
+          if (!result) {
+            // If contact is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find contact with ID ${contactId}` });
+          } else {
+            // If the contact is found, send a 200 status with a JSON response containing the contact
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+    // ------------------------
+
     // ----------------------------------------------------------------------------
 
     // Update -----------------------------------------------------------------
-    app.put('/contacts/:id', (req,res) => {
-      console.log('UDR:', req.body)
+    app.put('/contacts/:id', (req, res) => {
+      const contactId = req.params.id;
+      const contactQuery = { _id: new ObjectId(contactId) };
+      const contactData = req.body;
+      console.log('Updated Contact Data:', contactData);
+
+
+      contactsCollection.findOneAndUpdate(contactQuery, { $set: contactData }, { upsert: true, returnOriginal: false })
+        .then((result) => {
+          console.log("updateResult",);
+          // res.send({contactData})
+          result = Object.assign({}, contactQuery, { category: req.body.category, author: req.body.author, contact: req.body.contact });
+          if (!result) {
+            return res.status(404).json({ message: `Cannot update contact with ID ${contactId}` });
+          } else {
+            return res.status(200).json(result);
+          }
+        })
+        .catch((e) => {
+          console.error(`Error updating contact ${contactId}`, e);
+          res.status(500).send('Server error');
+        });
+
     });
+
+    // API: PUT route handler that is called when the /api/contacts/:id endpoint is hit 
+    app.put('/api/contacts/:id', (req, res) => {
+      const contactId = req.params.id;
+      const contactQuery = { _id: new ObjectId(contactId) };
+      const contactData = req.body;
+      console.log('Updated Contact Data:', contactData);
+
+
+      contactsCollection.findOneAndUpdate(contactQuery, { $set: contactData }, { upsert: true, returnOriginal: false })
+        .then((result) => {
+          console.log("updateResult",);
+          // res.send({contactData})
+          result = Object.assign({}, contactQuery, contactData);
+          if (!result) {
+            return res.status(404).json({ message: `Cannot update contact with ID ${contactId}` });
+          } else {
+            return res.status(200).json(result);
+          }
+        })
+        .catch((e) => {
+          console.error(`Error updating contact ${contactId}`, e);
+          res.status(500).send('Server error');
+        });
+
+    });
+    // ------------------------
+
+
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
-    app.delete('/contacts', (req,res) => {
+    app.delete('/contacts', (req, res) => {
       console.log('DRR:', req.body)
     });
     // ----------------------------------------------------------------------------
+
+    // Listen for server on port localhost:3000
+    app.listen(PORT, function () {
+      console.log(`Listening on localhost:${PORT}`)
+    });
   })
-  .catch(error => { console.error(error) });
+  .catch(error => console.error(error));
 
-
-// Listen for server on port localhost:3000
-app.listen(PORT, function () {
-  console.log(`Listening on localhost:${PORT}`)
-});
 
 // Run server
 // cd working_dir && node server.js

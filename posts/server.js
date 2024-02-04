@@ -2,7 +2,6 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const path = require('path');
 const PORT = process.env.PORT || 3000;
 const ObjectId = require('mongodb').ObjectId;
 const MongoClient = require('mongodb').MongoClient;
@@ -11,17 +10,16 @@ const password = require("./password");
 const PASSWORD = password.getPassword();
 const CONNECTION_STRING = `mongodb+srv://posts:${PASSWORD}@posts-cluster.suvwexw.mongodb.net/?retryWrites=true&w=majority`;
 
-// Create Client Connection
 MongoClient.connect(CONNECTION_STRING)
   .then(client => {
-    console.log('Connected to MongoDB Server:')
+    console.log('Connected to MongoDB Server')
     const db = client.db("postsDB");
     const postsCollection = db.collection('posts');
 
     // we need to set view engine to ejs. This tells Express we’re using EJS as the template engine
     app.set('view engine', 'ejs');
 
-    // Body Parser ----------------------------------------------------------------
+    // Body Parser -----------------------------------------------------------
     /*
     Body-parser: is a middleware that helps express handle reading data from the <form> element.
     npm install body-parser --save
@@ -43,7 +41,7 @@ MongoClient.connect(CONNECTION_STRING)
     app.use(bodyParser.json());
     //  Serve Static Files ----------------------------------------------------
     app.use(express.static('public'));
-    
+
     // ----------------------------------------------------------------------------
 
     // Create ---------------------------------------------------------------------
@@ -65,18 +63,41 @@ MongoClient.connect(CONNECTION_STRING)
     See: Body-parser
     */
 
+    // POST route for adding a new post
     app.post('/posts', (req, res) => {
-      // console.log('This is a POST request');
-      // console.log(req.body)
+      // Log the request body
+      console.log('rb', req.body);
 
-      // Add items to collection
+      // Add the received post to the database collection
       postsCollection.insertOne(req.body)
         .then(result => {
-          // redirect browser
+          console.log('rb2', result)
+          // Redirect the browser to the home page after successfully adding the post
           res.redirect('/');
         })
-        .catch(err => console.error(err))
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+        });
     });
+
+    // API:---------------------
+    app.post('/api', (req, res) => {
+      
+      // Add the received post to the database collection
+      postsCollection.insertOne(req.body)
+        .then(result => {
+          // Send back the inserted document as JSON
+          res.json(req.body);
+          // Redirect the browser to the home page after successfully adding the post
+          // res.redirect('/');
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+        });
+    });
+    // ---------------------------
     // ----------------------------------------------------------------------------
 
     // Read -----------------------------------------------------------------------
@@ -93,72 +114,283 @@ MongoClient.connect(CONNECTION_STRING)
     app.get('/', (req, res) => {handle get req})
     */
 
-    // Home page
+    // Home page route
     app.get('/', (req, res) => {
-      // Let'serve index.html
-      // __dirname is the current directory you're in. 
-      // console.log(__dirname)
-      // res.sendFile(__dirname + '/index.html')
 
-      // Get posts from database
-      // const allPosts = db.collection('posts').find();
-      // Makes no sense logged
-      // console.log(allPosts);
+      // Retrieve posts from the database
+      postsCollection.find()
+        .toArray() // Convert MongoDB cursor to array
+        .then(results => {
+          // Render the home page with the retrieved posts
+          res.render('index', { posts: results });
 
-      // Convert data to array
-      db.collection('posts').find()
+          // Alternative approach: Determine the response format based on the request accept header
+          // if (req.accepts('html')) {
+          //   res.status(200).render('index.ejs', { posts: results });
+          // } else {
+          //   res.status(200).json({ posts: results });
+          // }
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+          // Send a 500 response for any internal server errors
+          res.status(500).send('Internal Server Error');
+        });
+    });
+
+    // API: Route to retrieve all posts as JSON
+    app.get('/api/posts', (req, res) => {
+      // Retrieve all posts from the database
+      postsCollection.find()
+        .toArray() // Convert MongoDB cursor to array
+        .then(results => {
+          // Check if there are any posts found
+          (!results) ?
+            // Send a 404 response if no posts are found
+            res.status(404).json({
+              message: 'No entries found.',
+              results // Include an empty results array in the response
+            })
+            :
+            // Send a successful response with the posts as JSON
+            res.status(200).json(results);
+
+        })
+        .catch(err => {
+          // Log any errors to the console
+          console.error(err);
+          // Send a 500 response for any internal server errors
+          res.status(500).send('Internal Server Error');
+        });
+    });
+    // ------------------------
+
+    // API: Route to retrieve all posts by ID as JSON
+    app.get('/api/posts/:id', (req, res) => {
+      // Extract the post ID from the request parameters
+      let postId = req.params.id;
+
+      // Define the query to find the post by its ID
+      let postQuery = { _id: new ObjectId(postId) };
+
+      // Use findOne to find the post in the database
+      postsCollection.findOne(postQuery)
+        .then((result) => {
+
+          // Check if the post is not found
+          if (!result) {
+            // If post is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find post with ID ${postId}` });
+          } else {
+            // If the post is found, send a 200 status with a JSON response containing the post
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+    // ------------------------
+
+    // Route to retrieve all posts by ID
+    app.get('/posts/:id', (req, res) => {
+      // Extract the post ID from the request parameters
+      let postId = req.params.id;
+
+      // Define the query to find the post by its ID
+      let postQuery = { _id: new ObjectId(postId) };
+
+      // Use findOne to find the post in the database
+      postsCollection.findOne(postQuery)
+        .then((result) => {
+          // Log the result to the console
+          // console.log('r', result);
+
+          // Check if the post is not found
+          if (!result) {
+            // If post is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find post with ID ${postId}` });
+          } else {
+            // If the post is found, send a 200 status with a JSON response containing the post
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+
+    // GET route for retrieving all posts
+    app.get('/posts', (req, res) => {
+      // Retrieve all posts from the database collection
+      postsCollection.find()
         .toArray()
         .then(results => {
-          res.render('index.ejs', { posts: results});
+          // Log the results to the console
+          console.log(results);
+
+          // Check if there are no results
+          if (!results) {
+            // If no results found, send a 404 status with a JSON response
+            return res.status(404).json({ message: 'No Results' });
+          } else {
+            // If results found, send a 200 status with a JSON response containing the results
+            res.status(200).json(results);
+          }
         })
-        .catch(err => console.error(err));
-
+        .catch(err => {
+          // Log any errors to the console and send a 500 status with a JSON response containing the error
+          console.error(err);
+          res.status(500).json({ error: err })
+        })
     });
 
-    // Get all posts
-    app.get('/posts', (req, res) => {
-      res.send('Posts')
-    })
-
-    // Get update form pre-filled
-    app.get('/posts/:id/edit', (req,res) => {
+    // GET route for editing a specific post
+    app.get('/posts/:id/edit', (req, res) => {
+      // Extract the post ID from the request parameters
       let postId = req.params.id;
-      let postQuery = { _id: new ObjectId(postId)};
+
+      // Define the query to find the post by its ID
+      let postQuery = { _id: new ObjectId(postId) };
+
+      // Log the post ID to the console
       console.log(postId);
-      // res.send(`Editing post: ${postId}`);
-      db.collection("posts").findOne(postQuery)
-       .then((result) =>{
-         //console.log(result);
-         if(!result){
-           res.redirect("/")
-         } else {
-           res.render("edit-post.ejs", {pageTitle:"Edit Post", post: result})
-         }
-       }).catch((err)=>{
-         console.log(err);
-         res.status(500).send('Internal Server Error')
-       })
+
+      // Use findOne to find the post in the database
+      postsCollection.findOne(postQuery)
+        .then((result) => {
+          // Log the result to the console
+          console.log('r', result);
+
+          // Check if the post is not found
+          if (!result) {
+            // If post is not found, send a 404 status with a JSON response and redirect to the home page
+            return res.status(404).json({ message: `Cannot find post with ID ${postId}` }).redirect("/");
+          } else {
+            // If the post is found
+
+            // Check if the request's accept header indicates JSON format
+            const acceptHeader = req.headers['accept'];
+            if (acceptHeader && acceptHeader.includes('application/json')) {
+              // If JSON format is requested, send a 200 status with a JSON response containing the post
+              return res.status(200).json(result);
+            } else {
+              // If HTML format is requested, render the edit-post.ejs template with the post data
+              res.render("edit-post.ejs", { post: result });
+            }
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).send('Internal Server Error');
+        });
     });
+
+    // API: GET route for editing a specific post in API format
+    app.get('/api/posts/:id/edit', (req, res) => {
+      // Extract the post ID from the request parameters
+      let postId = req.params.id;
+
+      // Define the query to find the post by its ID
+      let postQuery = { _id: new ObjectId(postId) };
+
+      // Use findOne to find the post in the database
+      postsCollection.findOne(postQuery)
+        .then((result) => {
+
+          // Check if the post is not found
+          if (!result) {
+            // If post is not found, send a 404 status with a JSON response
+            return res.status(404).json({ message: `Cannot find post with ID ${postId}` });
+          } else {
+            // If the post is found, send a 200 status with a JSON response containing the post
+            res.status(200).json(result);
+          }
+        })
+        .catch((err) => {
+          // Log any errors to the console and send a 500 status with a JSON response indicating internal server error
+          console.log(err);
+          res.status(500).json({ error: 'Internal Server Error' });
+        });
+    });
+    // ------------------------
+
     // ----------------------------------------------------------------------------
 
     // Update -----------------------------------------------------------------
-    app.put('/posts/:id', (req,res) => {
-      console.log('UDR:', req.body)
+    app.put('/posts/:id', (req, res) => {
+      const postId = req.params.id;
+      const postQuery = { _id: new ObjectId(postId) };
+      const postData = req.body;
+      console.log('Updated Post Data:', postData);
+
+
+      postsCollection.findOneAndUpdate(postQuery, { $set: postData }, { upsert: true, returnOriginal: false })
+        .then((result) => {
+          console.log("updateResult",);
+          // res.send({postData})
+          result = Object.assign({}, postQuery, { category: req.body.category, author: req.body.author, post: req.body.post });
+          if (!result) {
+            return res.status(404).json({ message: `Cannot update post with ID ${postId}` });
+          } else {
+            return res.status(200).json(result);
+          }
+        })
+        .catch((e) => {
+          console.error(`Error updating post ${postId}`, e);
+          res.status(500).send('Server error');
+        });
+
     });
+
+    // API: PUT route handler that is called when the /api/posts/:id endpoint is hit 
+    app.put('/api/posts/:id', (req, res) => {
+      const postId = req.params.id;
+      const postQuery = { _id: new ObjectId(postId) };
+      const postData = req.body;
+      console.log('Updated Post Data:', postData);
+
+
+      postsCollection.findOneAndUpdate(postQuery, { $set: postData }, { upsert: true, returnOriginal: false })
+        .then((result) => {
+          console.log("updateResult",);
+          // res.send({postData})
+          result = Object.assign({}, postQuery, postData);
+          if (!result) {
+            return res.status(404).json({ message: `Cannot update post with ID ${postId}` });
+          } else {
+            return res.status(200).json(result);
+          }
+        })
+        .catch((e) => {
+          console.error(`Error updating post ${postId}`, e);
+          res.status(500).send('Server error');
+        });
+
+    });
+    // ------------------------
+
+
     // ----------------------------------------------------------------------------
 
     // Delete ---------------------------------------------------------------------
-    app.delete('/posts', (req,res) => {
+    app.delete('/posts', (req, res) => {
       console.log('DRR:', req.body)
     });
     // ----------------------------------------------------------------------------
-  })
-  .catch(error => { console.error(error) })
 
-// Listen for server on port localhost:3000
-app.listen(PORT, function () {
-  console.log(`Listening on localhost:${PORT}`)
-});
+    // Listen for server on port localhost:3000
+    app.listen(PORT, function () {
+      console.log(`Listening on localhost:${PORT}`)
+    });
+  })
+  .catch(error => console.error(error));
 
 // Run server
 // cd working_dir && node server.js
