@@ -427,7 +427,7 @@ MongoClient.connect(CONNECTION_STRING)
             res.json({ message: 'No record of that contact was found.' });
           } else {
             console.log('Deleted', result, contactData);
-            res.status(200).json(result)
+            res.status(200).json(result);
           }
         })
         .catch((e) => {

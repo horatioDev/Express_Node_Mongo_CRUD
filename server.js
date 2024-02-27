@@ -456,6 +456,7 @@ MongoClient.connect(CONNECTION_STRING)
           res.json({message: 'No record of that quote was found.'});
         } else {
           console.log('Deleted', result, quoteData);
+          res.redirect('/')
           res.status(200).json(result)
         }
       })

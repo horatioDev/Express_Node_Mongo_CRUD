@@ -10,8 +10,9 @@
 		<title>Address Book App</title>
 
 		<!-- external CSS link -->
-		<link rel="stylesheet" href="css/normalize.css">
-		<link rel="stylesheet" href="css/style.css">
+		<link rel="stylesheet" href="/css/normalize.css">
+		<link rel="stylesheet" href="/css/style.css">
+		<script src="https://kit.fontawesome.com/29cb2c9a11.js" crossorigin="anonymous"></script>
 	</head>
 	<body>
 		<h1>Address Book: Node.js CRUD API with Express and MongoDB</h1>
@@ -72,7 +73,16 @@
 				<p>No contacts available.</p>
 			<%}%>
 		</ul>
+
+		<!-- Links to Other API's -->
+		<ul>
+			<!-- <li class="api-icon"><a href="/contacts"><i class="fas fa-address-book"></i> Address Book API</a></li> -->
+			<li class="api-icon"><a href="/posts"><i class="fas fa-pencil-alt"></i> Posts/Blog API</a></li>
+			<li class="api-icon"><a href="/tasks"><i class="fas fa-tasks"></i> Tasks Manager API</a></li>
+			<li class="api-icon"><a href="/employees"><i class="fas fa-users"></i> Team Tracker API</a></li>
+			<li class="api-icon"><a href="/quotes"><i class="fas fa-quote-left"></i> Quotes API</a></li>
+		</ul>
 		<!-- <%= contacts %> -->
-		<script src="/main.js"></script>
+		<script src="/js/main.js"></script>
 	</body>
 </html>
