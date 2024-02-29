@@ -4,11 +4,11 @@ const express =  require('express');
 const router = express.Router();
 
 // Import the contactsRouter and productsRouter
-const contactsRouter = require('./api/contacts/contacts.js');
-const postsRouter = require('./api/posts/posts.js');
-const quotesRouter = require('./api/quotes/quotes.js');
-const tasksRouter = require('./api/tasks/tasks.js');
-const employeesRouter = require('./api/employees/employees.js');
+const contactsRouter = require('./routes/api/contacts/contacts.js');
+const postsRouter = require('./routes/api/posts/posts.js');
+const quotesRouter = require('./routes/api/quotes/quotes.js');
+const tasksRouter = require('./routes/api/tasks/tasks.js');
+const employeesRouter = require('./routes/api/employees/employees.js');
 
 // Mount the contactsRouter, quotesRouter and postsRouter middleware
 // Mount the contactsRouter, quotesRouter and postsRouter middleware
