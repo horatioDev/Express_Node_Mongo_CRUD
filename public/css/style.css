@@ -10,13 +10,16 @@
 /******************************************
 /* LAYOUT
 /*******************************************/
-.quote,
+.contact,
+.post,
+.task,
+.employee,
 .api-icon {
   list-style: none;
   margin-bottom: 10px;
 }
 
-.app-icon i {
+.api-icon i {
   margin-right: 10px;
 }
 

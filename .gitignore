@@ -1,4 +1,15 @@
 node_modules/
-./*/node_modules
-password.js
-./*/password.js
+secrets/*
+./*/secrets/*
+
+
+# Address Book
+address_book/
+# Posts
+posts/
+# Quotes
+quotes/
+# Tasks
+tasks/
+# Team Tracker
+team_tracker/

@@ -18,7 +18,7 @@
 
 		<!-- Quotes -->
 		<h2>Edit Quote</h2>
-		<form id="editQuoteForm" action="/quotes/<%= quote._id %>/edit" method="PUT">
+		<form id="editForm" action="/quotes/<%= quote._id %>" method="PUT">
 		
 			<label for="category">Category:</label><br>
 			<input type="text" id="category" name="category" value="<%= quote.category %>"><br>
@@ -31,10 +31,10 @@
 		
 			<!-- Add more fields as needed -->
 		
-			 <button data-id="<%= quote._id %>" id="save-btn" class="btn btn-succes" type="submit">Save Changes</button>
-			<button data-id="<%= quote._id %>" id="cancel-btn" class="btn btn-succes" type="submit">Cancel</button>
+			 <button data-name="quotes" data-id="<%= quote._id %>" id="save-btn" class="btn btn-succes" type="submit">Save Changes</button>
+			<button data-name="quotes" data-id="<%= quote._id %>" id="cancel-btn" class="btn btn-succes" type="submit"><a href="/quotes">Cancel</a></button>
 		</form>
 
-		<script src="/main.js"></script>
+		<script src="/js/main.js"></script>
 	</body>
 </html>
