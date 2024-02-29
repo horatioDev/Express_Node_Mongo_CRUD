@@ -1,10 +1,6 @@
-node_modules/
-secrets/*
-./*/secrets/*
-
-
 # Address Book
 address_book/
+node_modules/
 # Posts
 posts/
 # Quotes
@@ -13,3 +9,5 @@ quotes/
 tasks/
 # Team Tracker
 team_tracker/
+secrets/
+
