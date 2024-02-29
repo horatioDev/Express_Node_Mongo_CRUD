@@ -1,7 +1,6 @@
 // Create server for browser use w/ express
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
 const PORT = process.env.PORT || 3000;
 const ObjectId = require('mongodb').ObjectId;
 const MongoClient = require('mongodb').MongoClient;
