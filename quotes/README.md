@@ -1,7 +1,7 @@
 # Quotes App
 
 ## Overview
-The Quotes App is a web application designed to provide users with inspirational and motivational quotes. It offers a collection of quotes that users can explore for inspiration and motivation.
+The Quotes App is a web application designed to allow users to create inspirational and motivational quotes. 
 
 ### Technologies Used
 - Node.js
